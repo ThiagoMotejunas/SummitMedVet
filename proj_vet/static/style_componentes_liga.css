@@ -1,7 +1,7 @@
 body.liga-body {
   margin: 0;
   padding: 0;
-  background-color: #1e2939;
+  background-color: #1e2838;
   font-family: 'Segoe UI', sans-serif;
   display: flex;
   justify-content: center;
@@ -69,7 +69,7 @@ body.liga-body {
   display: block;
   margin: 40px auto 0;
   text-align: center;
-  background-color: #2f5292;
+  background-color: #0d223d;
   color: white;
   padding: 12px 20px;
   border-radius: 6px;
@@ -79,5 +79,5 @@ body.liga-body {
 }
 
 .btn-voltar:hover {
-  background-color: #08193b;
+  background-color: #071d3d;
 }
