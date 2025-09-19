@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Bulário Veterinário</title>
+  <link rel="stylesheet" href="/static/style_bulario.css">
+</head>
+<body class="bulario-body">
+  <div class="bulario-container">
+
+    <h1 class="bulario-titulo">Bulário Veterinário</h1>
+
+    <!-- Cadastro de Medicamento -->
+    <section class="cadastro-medicamento">
+        <h2>Cadastrar Novo Medicamento</h2>
+
+        <div class="cadastro-box">
+            <form id="form-bulario" class="bulario-form">
+            <div class="linha-dupla">
+                <div class="form-group coluna-esquerda">
+                <label for="nome-comercial">Nome Comercial:</label>
+                <input type="text" id="nome-comercial" name="nome-comercial" required>
+                </div>
+
+                <div class="form-group coluna-direita">
+                <label for="nome-cientifico">Nome Científico:</label>
+                <input type="text" id="nome-cientifico" name="nome-cientifico" required>
+                </div>
+            </div>
+
+            <div class="linha-dupla">
+                <div class="form-group coluna-esquerda">
+                <label for="dosagem-geral">Dosagem Geral:</label>
+                <input type="text" id="dosagem-geral" placename="dosagem-geral" required>
+                </div>
+
+                <div class="form-group coluna-direita">
+                <label for="dosagem-doenca">Dosagem por Doença:</label>
+                <input type="text" id="dosagem-doenca" name="dosagem-doenca">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="doencas-relacionadas">Doenças Relacionadas:</label>
+                <input type="text" id="doencas-relacionadas" name="doencas-relacionadas">
+            </div>
+
+            <button type="submit" class="btn-cadastrar">Cadastrar Medicamento</button>
+            </form>
+        </div>
+    </section>
+
+    <section class="busca-medicamento">
+        <h2>Buscar Medicamento</h2>
+
+        <div class="busca-wrapper">
+            <select id="filtro-busca" name="filtro-busca">
+            <option value="doenca">Buscar por Doença</option>
+            <option value="comercial">Buscar por Nome Comercial</option>
+            <option value="cientifico">Buscar por Nome Científico</option>
+            </select>
+
+            <input type="text" id="campo-busca" placeholder="Digite sua busca...">
+            <button type="button" class="btn-buscar">Buscar</button>
+        </div>
+    </section>
+
+
+    <a href="/central" class="btn-voltar">Voltar ao Menu</a>
+  </div>
+</body>
+</html>
