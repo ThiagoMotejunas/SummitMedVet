@@ -79,7 +79,8 @@ body.docs-body {
 .doc-icon {
   width: 100%;
   height: 100px;       /* altura menor da miniatura */
-  object-fit: contain; /* mantém proporção */
+  object-fit: cover; /* corta e preenche o espaço */
+  object-position: top;      /* foca no topo da página */
   background-color: #fff;
   display: block;
 }

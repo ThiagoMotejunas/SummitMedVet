@@ -78,7 +78,7 @@ body.calc-body {
   background-color: #00a63e;
   border: none;
   border-radius: 10px;
-  color: white;
+  color: rgb(255, 255, 255);
   font-size: 16px;
   font-weight: bold;
   cursor: pointer;
@@ -91,6 +91,7 @@ body.calc-body {
 .calc-resultado {
   margin-top: 30px;
   background-color: #ffffff;
+  color: #383838;
   padding: 20px;
   border-radius: 8px;
   box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
