@@ -1,6 +1,7 @@
-from flask import Flask, render_template, send_from_directory, send_file, jsonify, request
+from flask import Flask, render_template, send_from_directory, send_file, jsonify, request, redirect, url_for
 import os
 from pdf2image import convert_from_path
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 
@@ -23,11 +24,50 @@ def central():
 @app.route('/cadastro', methods=['GET', 'POST'])
 def cadastro():
     if request.method == 'POST':
-        nome = request.form.get('nome')
         email = request.form.get('email')
         senha = request.form.get('senha')
-        return f"Usuário {nome} cadastrado com sucesso!"
+
+        # Se for admin, redireciona para painel de administração
+        if email == "admin" and senha == "123admin":
+            return redirect(url_for('admin'))
+
+        # Caso contrário, fluxo normal de cadastro
+        return f"Usuário {email} cadastrado com sucesso!"
+    
     return render_template('cadastro.html')
+
+
+# ---------------- ROTAS DO ADMIN ---------------- #
+
+@app.route('/admin')
+def admin():
+    return render_template('admin.html')
+
+@app.route('/admin/palestras', methods=['POST'])
+def admin_palestras():
+    titulo = request.form.get('titulo')
+    data = request.form.get('data')
+    descricao = request.form.get('descricao')
+
+    novo_id = max([e["id"] for e in eventos]) + 1 if eventos else 1
+    eventos.append({"id": novo_id, "title": titulo, "date": data, "descricao": descricao})
+
+    return render_template('admin.html', mensagem="Palestra adicionada com sucesso!", eventos=eventos)
+
+@app.route('/admin/upload_pdf', methods=['POST'])
+def upload_pdf():
+    if 'pdf' not in request.files:
+        return "Nenhum arquivo enviado", 400
+    file = request.files['pdf']
+    if file.filename == '':
+        return "Nome de arquivo inválido", 400
+
+    filename = secure_filename(file.filename)
+    file.save(os.path.join(PASTA_PDFS, filename))
+
+    return render_template('admin.html', mensagem="✅ PDF enviado com sucesso!", tipo="success")
+
+# ---------------- OUTRAS TELAS ---------------- #
 
 @app.route('/criar_conta')
 def criar_conta():
@@ -86,7 +126,6 @@ def thumb(nome):
 
 # ---------------- CALENDÁRIO ---------------- #
 
-# Exemplo de “banco” em memória (substitua por DB depois)
 eventos = [
     {"id": 1, "title": "Palestra sobre Nutrição Animal", "date": "2025-09-15", "descricao": "Conceitos e atualizações"},
     {"id": 2, "title": "Cuidados com Animais Silvestres", "date": "2025-09-20", "descricao": "Protocolos e legislação"},

@@ -65,7 +65,7 @@
       const volume = parseFloat(document.getElementById('volume').value);
 
       const doseTotal = dosagem * peso;
-      const concentracao = 1000 / volume; // assume 1000mg por frasco
+      const concentracao = 10000 / volume; // assume 1000mg por frasco
       const ml = (doseTotal / concentracao).toFixed(2);
       const comprimido = (doseTotal / 100).toFixed(2); // assume 100mg por comprimido
 
