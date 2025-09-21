@@ -10,6 +10,12 @@ Este projeto é um sistema em **Flask** que reúne várias funcionalidades útei
 
 ---
 
+## 🖥️ Apresentação visual do sistema
+
+
+https://github.com/user-attachments/assets/179bec7f-164d-4e34-a97d-ab029e81735e
+
+
 ## 🚀 Como rodar o projeto
 
 ### 1. Clonar o repositório
