@@ -10,61 +10,41 @@
 
     <h1 class="bulario-titulo">Bulário Veterinário</h1>
 
-    <!-- Cadastro de Medicamento -->
-    <section class="cadastro-medicamento">
-        <h2>Cadastrar Novo Medicamento</h2>
+    <!-- Formulário de busca -->
+    <form method="GET" action="/bulario" class="bulario-form">
+      <select name="filtro" class="bulario-select">
+        <option value="comercial" {% if filtro == 'comercial' %}selected{% endif %}>Buscar por Nome Comercial</option>
+        <option value="cientifico" {% if filtro == 'cientifico' %}selected{% endif %}>Buscar por Nome Científico</option>
+        <option value="doenca" {% if filtro == 'doenca' %}selected{% endif %}>Buscar por Doença</option>
+      </select>
+      <input type="text" name="busca" placeholder="Digite sua busca..." value="{{ busca }}" class="bulario-input">
+      <button type="submit" class="bulario-btn">Buscar</button>
+    </form>
 
-        <div class="cadastro-box">
-            <form id="form-bulario" class="bulario-form">
-            <div class="linha-dupla">
-                <div class="form-group coluna-esquerda">
-                <label for="nome-comercial">Nome Comercial:</label>
-                <input type="text" id="nome-comercial" name="nome-comercial" required>
-                </div>
+    <!-- Lista de medicamentos -->
+    <section class="lista-medicamentos">
+        <h2>Medicamentos Cadastrados</h2>
 
-                <div class="form-group coluna-direita">
-                <label for="nome-cientifico">Nome Científico:</label>
-                <input type="text" id="nome-cientifico" name="nome-cientifico" required>
+        <div class="meds-grid">
+            {% for med in medicamentos %}
+            <div class="med-card">
+                <div class="med-card-content">
+                <h3>{{ med.nome_comercial }}</h3>
+                <p><em>{{ med.nome_cientifico }}</em></p>
+                <p><strong>Dosagem Geral:</strong> {{ med.dosagem_geral }}</p>
+                {% if med.dosagem_doenca %}
+                    <p><strong>Dosagem por Doença:</strong> {{ med.dosagem_doenca }}</p>
+                {% endif %}
+                {% if med.doencas_relacionadas %}
+                    <p><strong>Doenças:</strong> {{ med.doencas_relacionadas }}</p>
+                {% endif %}
                 </div>
             </div>
-
-            <div class="linha-dupla">
-                <div class="form-group coluna-esquerda">
-                <label for="dosagem-geral">Dosagem Geral:</label>
-                <input type="text" id="dosagem-geral" placename="dosagem-geral" required>
-                </div>
-
-                <div class="form-group coluna-direita">
-                <label for="dosagem-doenca">Dosagem por Doença:</label>
-                <input type="text" id="dosagem-doenca" name="dosagem-doenca">
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label for="doencas-relacionadas">Doenças Relacionadas:</label>
-                <input type="text" id="doencas-relacionadas" name="doencas-relacionadas">
-            </div>
-
-            <button type="submit" class="btn-cadastrar">Cadastrar Medicamento</button>
-            </form>
+            {% else %}
+            <p>Nenhum medicamento encontrado.</p>
+            {% endfor %}
         </div>
     </section>
-
-    <section class="busca-medicamento">
-        <h2>Buscar Medicamento</h2>
-
-        <div class="busca-wrapper">
-            <select id="filtro-busca" name="filtro-busca">
-            <option value="doenca">Buscar por Doença</option>
-            <option value="comercial">Buscar por Nome Comercial</option>
-            <option value="cientifico">Buscar por Nome Científico</option>
-            </select>
-
-            <input type="text" id="campo-busca" placeholder="Digite sua busca...">
-            <button type="button" class="btn-buscar">Buscar</button>
-        </div>
-    </section>
-
 
     <a href="/central" class="btn-voltar">Voltar ao Menu</a>
   </div>

@@ -73,10 +73,6 @@ def upload_pdf():
 def criar_conta():
     return render_template('criar_conta.html')
 
-@app.route('/bulario')
-def bulario():
-    return render_template('bulario.html')
-
 @app.route('/calculadora')
 def calculadora():
     return render_template('calculadora.html')
@@ -84,6 +80,48 @@ def calculadora():
 @app.route('/componentes')
 def componentes():
     return render_template('componentes_liga.html')
+
+# ---------------- BULÁRIO ---------------- #
+medicamentos = []
+@app.route('/bulario')
+def bulario():
+    busca = request.args.get('busca', '').lower()
+    filtro = request.args.get('filtro', 'comercial')  # padrão: nome comercial
+
+    resultados = medicamentos
+
+    if busca:
+        if filtro == 'doenca':
+            resultados = [m for m in medicamentos if busca in m.get("doencas_relacionadas", "").lower()]
+        elif filtro == 'cientifico':
+            resultados = [m for m in medicamentos if busca in m.get("nome_cientifico", "").lower()]
+        else:  # comercial
+            resultados = [m for m in medicamentos if busca in m.get("nome_comercial", "").lower()]
+
+    return render_template('bulario.html', medicamentos=resultados, busca=busca, filtro=filtro)
+
+
+@app.route('/admin/medicamentos', methods=['POST'])
+def admin_medicamentos():
+    nome_comercial = request.form.get('nome_comercial')
+    nome_cientifico = request.form.get('nome_cientifico')
+    dosagem_geral = request.form.get('dosagem_geral')
+    dosagem_doenca = request.form.get('dosagem_doenca')
+    doencas_relacionadas = request.form.get('doencas_relacionadas')
+
+    novo_id = len(medicamentos) + 1
+    medicamentos.append({
+        "id": novo_id,
+        "nome_comercial": nome_comercial,
+        "nome_cientifico": nome_cientifico,
+        "dosagem_geral": dosagem_geral,
+        "dosagem_doenca": dosagem_doenca,
+        "doencas_relacionadas": doencas_relacionadas
+    })
+
+    return render_template('admin.html', mensagem="Medicamento cadastrado com sucesso!", tipo="success", medicamentos=medicamentos)
+
+# ---------------- DOCUMENTOS (PDF) ---------------- #
 
 @app.route('/documentos')
 def documentos():

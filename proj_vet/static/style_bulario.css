@@ -3,137 +3,97 @@ body.bulario-body {
   padding: 0;
   background-color: #1e2939;
   font-family: 'Segoe UI', sans-serif;
+  color: #fff;
   display: flex;
   justify-content: center;
   align-items: flex-start;
   min-height: 100vh;
-  color: #fff;
 }
 
 .bulario-container {
-  background-color: #2c3e50;
-  padding: 40px;
-  border-radius: 12px;
-  max-width: 900px;
+  max-width: 1000px;
   width: 100%;
-  margin: 40px;
-  box-shadow: 0 0 15px rgba(0,0,0,0.5);
+  padding: 40px;
 }
 
 .bulario-titulo {
   text-align: center;
-  margin-bottom: 30px;
   font-size: 28px;
-  color: #f1f1f1;
-}
-
-section {
   margin-bottom: 40px;
 }
 
-section h2 {
-  font-size: 20px;
-  margin-bottom: 20px;
+/* Formulário de busca */
+.bulario-form {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 30px;
+}
+
+.bulario-select,
+.bulario-input {
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #333333;
+  background-color: #fff;
+  color: #1e2939;
+}
+
+.bulario-input {
+  flex: 1;
+}
+
+.bulario-btn {
+  padding: 10px 20px;
+  background-color: #4CAF50;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.bulario-btn:hover {
+  background-color: #45a049;
+}
+
+/* Grid de medicamentos */
+.meds-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.med-card {
+  background-color: #2c3e50;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.3);
+  transition: transform 0.2s ease;
+}
+
+.med-card:hover {
+  transform: scale(1.03);
+  background-color: #264b6d;
+}
+
+.med-card h3 {
+  margin: 0 0 5px;
+  font-size: 18px;
   color: #ffffff;
 }
 
-/* NOVO: container destacado para cadastro */
-.cadastro-box {
-  background-color: #384552;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.3);
-}
-
-.form-group{
-    margin-right: 40px;
-}
-
-/* NOVO: layout em duas colunas */
-.linha-dupla {
-  display: flex;
-  gap: 50px;
-  margin-bottom: 15px;
-}
-
-.coluna-esquerda,
-.coluna-direita {
-  flex: 1;
-}
-
-.bulario-form .form-group {
-  margin-bottom: 15px;
-}
-
-.bulario-form label {
-  display: block;
-  margin-bottom: 6px;
-  font-weight: bold;
-}
-
-.bulario-form input {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #383838;
-  border-radius: 6px;
-  background-color: #fff;
-  color: #303030;
-}
-
-.btn-cadastrar {
-  width: 100%;
-  padding: 12px;
-  background-color: #00a63e;
-  border: none;
-  border-radius: 6px;
-  color: white;
-  font-size: 16px;
-  font-weight: bold;
-  cursor: pointer;
-  margin-top: 10px;
-}
-
-.btn-cadastrar:hover {
-  background-color: #44d44b;
-}
-
-/* Busca */
-.busca-wrapper {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.busca-wrapper select,
-.busca-wrapper input {
-  flex: 1;
-  padding: 10px;
-  border: 1px solid #4b4b4b;
-  border-radius: 6px;
-  background-color: #fff;
-  color: #313131;
-}
-
-.btn-buscar {
-  padding: 10px 20px;
-  background-color: #00a63e;
-  border: none;
-  border-radius: 6px;
-  color: white;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.btn-buscar:hover {
-  background-color: #44d44b;
+.med-card p {
+  margin: 4px 0;
+  font-size: 14px;
+  color: #ddd;
 }
 
 /* Botão voltar */
 .btn-voltar {
   display: block;
-  margin-top: 30px;
+  margin: 40px auto 0;
   text-align: center;
-  background-color: #132338;
+  background-color: #0d223d;
   color: white;
   padding: 12px;
   border-radius: 6px;

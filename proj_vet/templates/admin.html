@@ -30,6 +30,18 @@
       </form>
     </section>
 
+    <section>
+      <h2>Gerenciar Bulário (Medicamentos)</h2>
+      <form action="/admin/medicamentos" method="POST">
+        <input type="text" name="nome_comercial" placeholder="Nome Comercial" required>
+        <input type="text" name="nome_cientifico" placeholder="Nome Científico" required>
+        <input type="text" name="dosagem_geral" placeholder="Dosagem Geral" required>
+        <input type="text" name="dosagem_doenca" placeholder="Dosagem por Doença">
+        <input type="text" name="doencas_relacionadas" placeholder="Doenças Relacionadas">
+        <button type="submit">Cadastrar Medicamento</button>
+      </form>
+    </section>
+
     <a href="/central" class="btn-voltar">Ir ao Menu</a>
   </div>
 </body>
