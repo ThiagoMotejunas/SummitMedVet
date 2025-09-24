@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Visualizador de Artigos e Documentos</title>
+  <link rel="stylesheet" href="/static/style_documentos.css">
+</head>
+<body class="docs-body">
+  <div class="docs-container">
+    <h1 class="docs-titulo">Visualizador de Artigos e Documentos</h1>
+
+    <form method="GET" action="/documentos" class="docs-form">
+      <input type="text" name="busca" placeholder="Buscar por nome..." class="docs-input">
+      <button type="submit" class="docs-btn">Buscar</button>
+    </form>
+
+    <div class="docs-grid">
+  {% for arquivo in arquivos %}
+    <div class="doc-card">
+      <a href="{{ url_for('abrir_pdf', nome=arquivo) }}" target="_blank">
+        <img src="{{ url_for('thumb', nome=arquivo) }}" alt="PDF" class="doc-icon">
+        <p>{{ arquivo }}</p>
+      </a>
+    </div>
+  {% endfor %}
+</div>
+
+
+    <a href="/central" class="btn-voltar">Voltar ao Menu</a>
+  </div>
+</body>
+</html>
