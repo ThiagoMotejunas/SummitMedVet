@@ -43,6 +43,13 @@ def cadastro():
 def admin():
     return render_template('admin.html')
 
+# ---------------- ADMIN  PALESTRAS ---------------- #
+
+@app.route('/admin/palestras', methods=['GET'])
+def admin_palestras_listar():
+    mensagem = request.args.get('mensagem')
+    return render_template('admin_palestras.html', eventos=eventos, mensagem=mensagem)
+
 @app.route('/admin/palestras', methods=['POST'])
 def admin_palestras():
     titulo = request.form.get('titulo')
@@ -52,20 +59,105 @@ def admin_palestras():
     novo_id = max([e["id"] for e in eventos]) + 1 if eventos else 1
     eventos.append({"id": novo_id, "title": titulo, "date": data, "descricao": descricao})
 
-    return render_template('admin.html', mensagem="Palestra adicionada com sucesso!", eventos=eventos)
+    # redireciona para o GET, passando mensagem via querystring
+    return redirect(url_for('admin_palestras_listar', mensagem="Palestra adicionada com sucesso!"))
+
+@app.route('/admin/palestras/editar/<int:evento_id>', methods=['GET', 'POST'])
+def admin_palestras_editar(evento_id):
+    evento = next((e for e in eventos if e["id"] == evento_id), None)
+    if not evento:
+        return redirect(url_for('admin_palestras_listar', mensagem=" Palestra não encontrada."))
+
+    if request.method == 'POST':
+        evento["title"] = request.form.get('titulo')
+        evento["date"] = request.form.get('data')
+        evento["descricao"] = request.form.get('descricao')
+        return redirect(url_for('admin_palestras_listar', mensagem="Palestra editada com sucesso!"))
+
+    # GET → renderiza tela de edição
+    return render_template('admin_palestras.html', evento=evento)
+
+@app.route('/admin/palestras/excluir/<int:evento_id>', methods=['POST'])
+def admin_palestras_excluir(evento_id):
+    global eventos
+    eventos = [e for e in eventos if e["id"] != evento_id]
+    return redirect(url_for('admin_palestras_listar', mensagem="Palestra excluída com sucesso!"))
+
+# ---------------- ADMIN  BULÁRIO (MEDICAMENTOS) ---------------- #
+@app.route('/admin/medicamentos', methods=['GET'])
+def admin_medicamentos_listar():
+    mensagem = request.args.get('mensagem')
+    return render_template('admin_medicamentos.html', medicamentos=medicamentos, mensagem=mensagem)
+
+@app.route('/admin/medicamentos', methods=['POST'])
+def admin_medicamentos_criar():
+    nome_comercial = request.form.get('nome_comercial')
+    nome_cientifico = request.form.get('nome_cientifico')
+    dosagem_geral = request.form.get('dosagem_geral')
+    dosagem_doenca = request.form.get('dosagem_doenca')
+    doencas_relacionadas = request.form.get('doencas_relacionadas')
+
+    novo_id = len(medicamentos) + 1
+    medicamentos.append({
+        "id": novo_id,
+        "nome_comercial": nome_comercial,
+        "nome_cientifico": nome_cientifico,
+        "dosagem_geral": dosagem_geral,
+        "dosagem_doenca": dosagem_doenca,
+        "doencas_relacionadas": doencas_relacionadas
+    })
+
+    return redirect(url_for('admin_medicamentos_listar', mensagem="Medicamento cadastrado com sucesso!"))
+
+@app.route('/admin/medicamentos/editar/<int:med_id>', methods=['POST'])
+def admin_medicamentos_editar(med_id):
+    med = next((m for m in medicamentos if m["id"] == med_id), None)
+    if not med:
+        return redirect(url_for('admin_medicamentos_listar', mensagem="Medicamento não encontrado."))
+
+    med["nome_comercial"] = request.form.get('nome_comercial')
+    med["nome_cientifico"] = request.form.get('nome_cientifico')
+    med["dosagem_geral"] = request.form.get('dosagem_geral')
+    med["dosagem_doenca"] = request.form.get('dosagem_doenca')
+    med["doencas_relacionadas"] = request.form.get('doencas_relacionadas')
+
+    return redirect(url_for('admin_medicamentos_listar', mensagem="Medicamento editado com sucesso!"))
+
+@app.route('/admin/medicamentos/excluir/<int:med_id>', methods=['POST'])
+def admin_medicamentos_excluir(med_id):
+    global medicamentos
+    medicamentos = [m for m in medicamentos if m["id"] != med_id]
+    return redirect(url_for('admin_medicamentos_listar', mensagem="Medicamento excluído com sucesso!"))
+
+# ---------------- ADMIN  DOCUMENTOS ---------------- #
+
+@app.route('/admin/documentos', methods=['GET'])
+def admin_documentos_listar():
+    arquivos = [f for f in os.listdir(PASTA_PDFS) if f.endswith('.pdf')]
+    mensagem = request.args.get('mensagem')
+    return render_template('admin_documentos.html', arquivos=arquivos, mensagem=mensagem)
 
 @app.route('/admin/upload_pdf', methods=['POST'])
 def upload_pdf():
     if 'pdf' not in request.files:
-        return "Nenhum arquivo enviado", 400
+        return redirect(url_for('admin_documentos_listar', mensagem="Nenhum arquivo enviado."))
     file = request.files['pdf']
     if file.filename == '':
-        return "Nome de arquivo inválido", 400
+        return redirect(url_for('admin_documentos_listar', mensagem=" Nome de arquivo inválido."))
 
     filename = secure_filename(file.filename)
     file.save(os.path.join(PASTA_PDFS, filename))
 
-    return render_template('admin.html', mensagem="✅ PDF enviado com sucesso!", tipo="success")
+    return redirect(url_for('admin_documentos_listar', mensagem="PDF enviado com sucesso!"))
+
+@app.route('/admin/documentos/excluir/<nome>', methods=['POST'])
+def admin_documentos_excluir(nome):
+    caminho = os.path.join(PASTA_PDFS, nome)
+    if os.path.exists(caminho):
+        os.remove(caminho)
+        return redirect(url_for('admin_documentos_listar', mensagem="Documento excluído com sucesso!"))
+    return redirect(url_for('admin_documentos_listar', mensagem=" Documento não encontrado."))
+
 
 # ---------------- OUTRAS TELAS ---------------- #
 
@@ -80,6 +172,7 @@ def calculadora():
 @app.route('/componentes')
 def componentes():
     return render_template('componentes_liga.html')
+
 
 # ---------------- BULÁRIO ---------------- #
 medicamentos = []
@@ -99,27 +192,6 @@ def bulario():
             resultados = [m for m in medicamentos if busca in m.get("nome_comercial", "").lower()]
 
     return render_template('bulario.html', medicamentos=resultados, busca=busca, filtro=filtro)
-
-
-@app.route('/admin/medicamentos', methods=['POST'])
-def admin_medicamentos():
-    nome_comercial = request.form.get('nome_comercial')
-    nome_cientifico = request.form.get('nome_cientifico')
-    dosagem_geral = request.form.get('dosagem_geral')
-    dosagem_doenca = request.form.get('dosagem_doenca')
-    doencas_relacionadas = request.form.get('doencas_relacionadas')
-
-    novo_id = len(medicamentos) + 1
-    medicamentos.append({
-        "id": novo_id,
-        "nome_comercial": nome_comercial,
-        "nome_cientifico": nome_cientifico,
-        "dosagem_geral": dosagem_geral,
-        "dosagem_doenca": dosagem_doenca,
-        "doencas_relacionadas": doencas_relacionadas
-    })
-
-    return render_template('admin.html', mensagem="Medicamento cadastrado com sucesso!", tipo="success", medicamentos=medicamentos)
 
 # ---------------- DOCUMENTOS (PDF) ---------------- #
 
