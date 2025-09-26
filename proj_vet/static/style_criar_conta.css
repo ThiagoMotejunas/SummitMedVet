@@ -124,3 +124,16 @@ body.criar-body {
 .link-login:hover {
   text-decoration: underline;
 }
+
+/* Essa parte adicionei para variavel da mensagem ficar conforme o padrão do css*/
+.notificacao {
+  background-color: #f0f4f8;           /* fundo suave para contraste */
+  border-left: 5px solid #4CAF50;      /* verde padrão do botão de sucesso */
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  border-radius: 6px;
+  font-weight: bold;
+  color: #1e2939;                      /* cor escura para legibilidade */
+  text-align: center;
+  box-shadow: 0 0 5px rgba(0,0,0,0.1); /* leve sombra para destaque */
+}

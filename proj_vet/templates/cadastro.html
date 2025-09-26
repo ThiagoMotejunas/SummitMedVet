@@ -16,6 +16,11 @@
     <!-- Lado direito com formulário -->
     <div class="cadastro-formulario">
       <h1 class="cadastro-titulo">Cadastro de Usuário</h1>
+      
+      <!-- Aqui criei um bloco condicional onde ao receber a var "mensagem" do backend(ao tentar cadastrar), vai aparecer para o usuario -->
+      {% if mensagem %}
+        <div class="notificacao">{{ mensagem }}</div>
+      {% endif %}
 
       <form method="POST" action="/cadastro" class="cadastro-form" id="form-cadastro">
         <div class="form-group">
@@ -31,7 +36,9 @@
           </div>
         </div>
 
-        <button type="submit" class="btn-entrar">ENTRAR</button>
+
+        <button type="submit" class="btn-entrar" id="btn-cadastrar">ENTRAR</button>
+        
       </form>
 
       <div class="cadastro-footer">
