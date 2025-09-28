@@ -64,6 +64,7 @@ class Inscricao(db.Model):
     nome = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), nullable=False)
     palestra_id = db.Column(db.Integer, db.ForeignKey('palestras.id'), nullable=False)
+    palestra = db.relationship('Palestra', backref='inscricoes')
 
 # ---------------- ROTAS PRINCIPAIS ---------------- #
 
@@ -86,6 +87,10 @@ def cadastro():
 
         if usuario and bcrypt.check_password_hash(usuario.senha, senha):
             session['usuario_logado'] = usuario.email
+            session['nome'] = usuario.nome  # ← Adiciona nome à sessão
+            session['email'] = usuario.email  # ← Adiciona email à sessão
+            session['cargo'] = usuario.cargo
+
             if usuario.cargo == 1:
                 return render_template('admin.html', nome=usuario.nome)
             else:
@@ -121,6 +126,16 @@ def criar_conta():
 def admin_central():
     return render_template('admin.html')
 
+@app.route('/api/me')
+@login_required
+def api_me():
+    return jsonify({
+        "nome": session.get("nome"),
+        "email": session.get("email")
+        
+    })
+
+
 
 # ---------------- ROTA ADMIN | PALESTRAS ---------------- #
 
@@ -130,7 +145,9 @@ def admin_central():
 def admin_palestras_listar():
     mensagem = request.args.get('mensagem')
     eventos = Palestra.query.order_by(Palestra.date.asc()).all()
-    return render_template('admin_palestras.html', eventos=eventos, mensagem=mensagem)
+    inscricoes = Inscricao.query.order_by(Inscricao.id.asc()).all()
+    return render_template('admin_palestras.html', eventos=eventos, inscricoes=inscricoes, mensagem=mensagem)
+
 
 #Criar Palestra
 @app.route('/admin/palestras', methods=['POST'])
@@ -192,6 +209,26 @@ def listar_inscritos_evento(evento_id):
         "quantidade": len(lista),
         "inscritos": lista
     })
+
+#
+@app.route('/admin/palestras_cadastradas')
+@login_required
+def palestras_cadastradas():
+    palestras = Palestra.query.all()
+    resultado = []
+
+    for palestra in palestras:
+        qtd = Inscricao.query.filter_by(palestra_id=palestra.id).count()
+        resultado.append({
+            "id": palestra.id,
+            "title": palestra.title,
+            "descricao": palestra.descricao,
+            "data": palestra.date.strftime('%d/%m/%Y'),
+            "qtd_inscritos": qtd
+        })
+
+    return render_template('admin_palestras.html', palestras=resultado)
+
 
 # ---------------- ADMIN BULÁRIO (MEDICAMENTOS) ---------------- #
 @app.route('/admin/medicamentos', methods=['GET'])
@@ -346,7 +383,12 @@ def thumb(nome):
 @app.route('/calendario')
 @login_required
 def calendario():
-    return render_template('calendario.html')
+    # Exemplo: pegar usuário logado da sessão 
+    user = {
+        "nome": session.get("nome"),
+        "email": session.get("email")
+    }
+    return render_template('calendario.html', user=user)
 
 #Lista todas palestras
 @app.route('/api/eventos', methods=['GET'])
@@ -409,6 +451,61 @@ def eventos_do_usuario(email):
         "email": email,
         "quantidade": len(eventos),
         "eventos": eventos
+    })
+
+#----------Rota que define qual consulta executar na tela do calendario-------#
+
+@app.route('/api/minhas_inscricoes', methods=['GET'])
+@login_required
+def minhas_inscricoes():
+    email = session.get("email")
+    cargo = session.get("cargo")  # 0 = comum, 1 = admin
+
+    if cargo == 1:
+        # Admin: retorna todos os eventos com lista de inscritos
+        eventos = Palestra.query.all()
+        resultado = []
+        for evento in eventos:
+            inscritos = Inscricao.query.filter_by(palestra_id=evento.id).all()
+            resultado.append({
+                "id": evento.id,
+                "title": evento.title,
+                "date": evento.date.strftime('%Y-%m-%d'),
+                "descricao": evento.descricao,
+                "inscritos": [{"nome": i.nome, "email": i.email} for i in inscritos],
+                "qtd_inscritos": len(inscritos)
+            })
+        return jsonify(resultado)
+
+    else:
+        # Usuário comum: retorna apenas eventos em que está inscrito
+        inscricoes = Inscricao.query.filter_by(email=email).all()
+        resultado = []
+        for i in inscricoes:
+            evento = Palestra.query.get(i.palestra_id)
+            resultado.append({
+                "id": evento.id,
+                "title": evento.title,
+                "date": evento.date.strftime('%Y-%m-%d'),
+                "descricao": evento.descricao
+            })
+        return jsonify(resultado)
+
+
+#----------Rota que  vai contar carneirinhos(inscricoes) por palestra-------#
+@app.route('/api/eventos/<int:evento_id>/quantidade_inscritos', methods=['GET'])
+@login_required
+def contar_inscritos(evento_id):
+    evento = Palestra.query.get(evento_id)
+    if not evento:
+        return jsonify({"status": "erro", "mensagem": "Evento não encontrado."}), 404
+
+    quantidade = Inscricao.query.filter_by(palestra_id=evento_id).count()
+
+    return jsonify({
+        "status": "ok",
+        "evento": evento.title,
+        "quantidade_inscritos": quantidade
     })
 
 # ---------------- MAIN ---------------- #
