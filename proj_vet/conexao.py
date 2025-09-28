@@ -1,12 +1,13 @@
-
-from flask import Flask, render_template, send_from_directory, send_file, jsonify, request, redirect, url_for
+from flask import Flask, render_template, send_from_directory, send_file, jsonify, request, redirect, url_for, session
 import os
 from pdf2image import convert_from_path
 from werkzeug.utils import secure_filename
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
+from functools import wraps
 
 app = Flask(__name__)
+app.secret_key = 'sua_chave_secreta_aqui'  # Necessário para usar session
 bcrypt = Bcrypt(app)
 
 # Caminho para a pasta onde os PDFs estão armazenados
@@ -26,30 +27,38 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:020504@localhost/
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-#----Modelo de Classe Usuario------#
+# ---- Decorador para proteger rotas ---- #
+def login_required(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if 'usuario_logado' not in session:
+            print("🚫 Sessão não encontrada. Redirecionando.")
+            return redirect(url_for('cadastro'))
+        return f(*args, **kwargs)
+    return wrapper
 
+#----Modelo de Classe Usuario------#
 class Usuario(db.Model):
-    __tablename__ = 'usuarios'  # ← Nome da tabela no banco, agora em minúsculo para compatibilidade com PostgreSQL
+    __tablename__ = 'usuarios'
 
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     senha = db.Column(db.String(200), nullable=False)
-    cargo = db.Column(db.Integer, nullable=False, default=0)  # 0 = comum, 1 = admin
-
+    cargo = db.Column(db.Integer, nullable=False, default=0)
 
 # ---- MODELO DE PALESTRAS ---- #
 class Palestra(db.Model):
-    __tablename__ = 'palestras'  # ← Nome da tabela no banco, em minúsculo
+    __tablename__ = 'palestras'
 
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
     date = db.Column(db.Date, nullable=False)
     descricao = db.Column(db.Text)
 
-# ---- MODELO DE INSCRIÇÃO ( INTERMEDIÁRIO DE PALESTRAS ) ---- #
+# ---- MODELO DE INSCRIÇÃO ---- #
 class Inscricao(db.Model):
-    __tablename__ = 'inscricoes'  # ← Nome da tabela no banco, em minúsculo
+    __tablename__ = 'inscricoes'
 
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
@@ -60,90 +69,72 @@ class Inscricao(db.Model):
 
 @app.route('/')
 def index():
-    # Página inicial redireciona para tela de login
     return render_template('cadastro.html')
 
 @app.route('/central')
+@login_required
 def central():
-    # Tela principal após login
     return render_template('central_funcionalidades.html')
 
-#Rota para iniciar o flask no cadastro
-@app.route('/')
-def index():
-    # Página inicial redireciona para tela de login
-    return render_template('cadastro.html')
-
-
-#----------------- Func LOGIN/CADASTRO -------------#
 #LOGIN
 @app.route('/cadastro', methods=['GET', 'POST'])
 def cadastro():
     if request.method == 'POST':
-        # Recebe dados do formulário
         email = request.form.get('email')
         senha = request.form.get('senha')
-
-        # Busca usuário no banco
         usuario = Usuario.query.filter_by(email=email).first()
 
-        # Checagem com bcrypt usando a hash
         if usuario and bcrypt.check_password_hash(usuario.senha, senha):
-           # Verifica o cargo do usuário
+            session['usuario_logado'] = usuario.email
             if usuario.cargo == 1:
-                # Redireciona administrador caso cargo seja admn(1)
                 return render_template('admin.html', nome=usuario.nome)
             else:
-                # Redireciona usuário comum caso não seja adm e funcione o login
                 return render_template('central_funcionalidades.html', nome=usuario.nome)
         else:
-            # Retorna a tela com mensagem de erro caso dê errado
             return render_template('cadastro.html', mensagem="Credenciais inválidas.")
-            #Renderiza a mesma tela de cadastro novamente
     return render_template('cadastro.html')
 
 # CADASTRO DE CONTA
 @app.route('/criar_conta', methods=['GET', 'POST'])
 def criar_conta():
     if request.method == 'POST':
-        # Recebe dados do formulário
         nome = request.form.get('nome')
         email = request.form.get('email')
         senha = request.form.get('senha')
 
-        # Verifica se o e-mail já existe
         if Usuario.query.filter_by(email=email).first():
-            # Retorna a tela com mensagem de erro
             return render_template('criar_conta.html', mensagem="E-mail já cadastrado.")
 
-        # Criptografa a senha
         senha_hash = bcrypt.generate_password_hash(senha).decode('utf-8')
-
-        # Cria e salva o usuário
         novo_usuario = Usuario(nome=nome, email=email, senha=senha_hash, cargo=0)
         db.session.add(novo_usuario)
-        print(f"Registrando usuário: {nome}, {email}, cargo=0")
-
         db.session.commit()
 
-        # Retorna a tela de login com mensagem de sucesso
         return render_template('cadastro.html', mensagem="Cadastro feito com sucesso! Logue na aplicação para validar")
     return render_template('criar_conta.html')
 
+#---------- ROTAS DE ADMINISTRADOR------------#
+
+#Carrega página Admn
+@app.route('/admin')
+@login_required
+def admin_central():
+    return render_template('admin.html')
 
 
-# ---------------- ROTA ADMIN PALESTRAS ---------------- #
+# ---------------- ROTA ADMIN | PALESTRAS ---------------- #
 
-# Listar palestras
+#Listar todas palestras
 @app.route('/admin/palestras', methods=['GET'])
+@login_required
 def admin_palestras_listar():
     mensagem = request.args.get('mensagem')
     eventos = Palestra.query.order_by(Palestra.date.asc()).all()
     return render_template('admin_palestras.html', eventos=eventos, mensagem=mensagem)
 
-
-# Criar nova palestra
+#Criar Palestra
 @app.route('/admin/palestras', methods=['POST'])
+@login_required
 def admin_palestras():
     titulo = request.form.get('titulo')
     data = request.form.get('data')
@@ -155,9 +146,9 @@ def admin_palestras():
 
     return redirect(url_for('admin_palestras_listar', mensagem="Palestra adicionada com sucesso!"))
 
-
-# Editar palestra
+#Editar Palestra
 @app.route('/admin/palestras/editar/<int:evento_id>', methods=['GET', 'POST'])
+@login_required
 def admin_palestras_editar(evento_id):
     evento = Palestra.query.get(evento_id)
     if not evento:
@@ -172,9 +163,9 @@ def admin_palestras_editar(evento_id):
 
     return render_template('admin_palestras.html', evento=evento)
 
-
-# Excluir palestra
+#Excluir Palestra
 @app.route('/admin/palestras/excluir/<int:evento_id>', methods=['POST'])
+@login_required
 def admin_palestras_excluir(evento_id):
     evento = Palestra.query.get(evento_id)
     if evento:
@@ -183,14 +174,34 @@ def admin_palestras_excluir(evento_id):
         return redirect(url_for('admin_palestras_listar', mensagem="Palestra excluída com sucesso!"))
     return redirect(url_for('admin_palestras_listar', mensagem="Palestra não encontrada."))
 
+#-----------------Rota de ADM para poder consultar pessoas inscritas em um evento------------------------#
 
-# ---------------- ADMIN  BULÁRIO (MEDICAMENTOS) ---------------- #
+@app.route('/api/eventos/<int:evento_id>/inscritos', methods=['GET'])
+@login_required
+def listar_inscritos_evento(evento_id):
+    evento = Palestra.query.get(evento_id)
+    if not evento:
+        return jsonify({"status": "erro", "mensagem": "Evento não encontrado."}), 404
+
+    inscritos = Inscricao.query.filter_by(palestra_id=evento_id).all()
+    lista = [{"nome": i.nome, "email": i.email} for i in inscritos]
+
+    return jsonify({
+        "status": "ok",
+        "evento": evento.title,
+        "quantidade": len(lista),
+        "inscritos": lista
+    })
+
+# ---------------- ADMIN BULÁRIO (MEDICAMENTOS) ---------------- #
 @app.route('/admin/medicamentos', methods=['GET'])
+@login_required
 def admin_medicamentos_listar():
     mensagem = request.args.get('mensagem')
     return render_template('admin_medicamentos.html', medicamentos=medicamentos, mensagem=mensagem)
 
 @app.route('/admin/medicamentos', methods=['POST'])
+@login_required
 def admin_medicamentos_criar():
     nome_comercial = request.form.get('nome_comercial')
     nome_cientifico = request.form.get('nome_cientifico')
@@ -211,6 +222,7 @@ def admin_medicamentos_criar():
     return redirect(url_for('admin_medicamentos_listar', mensagem="Medicamento cadastrado com sucesso!"))
 
 @app.route('/admin/medicamentos/editar/<int:med_id>', methods=['POST'])
+@login_required
 def admin_medicamentos_editar(med_id):
     med = next((m for m in medicamentos if m["id"] == med_id), None)
     if not med:
@@ -225,26 +237,28 @@ def admin_medicamentos_editar(med_id):
     return redirect(url_for('admin_medicamentos_listar', mensagem="Medicamento editado com sucesso!"))
 
 @app.route('/admin/medicamentos/excluir/<int:med_id>', methods=['POST'])
+@login_required
 def admin_medicamentos_excluir(med_id):
     global medicamentos
     medicamentos = [m for m in medicamentos if m["id"] != med_id]
     return redirect(url_for('admin_medicamentos_listar', mensagem="Medicamento excluído com sucesso!"))
 
-# ---------------- ADMIN  DOCUMENTOS ---------------- #
-
+# ---------------- ADMIN DOCUMENTOS ---------------- #
 @app.route('/admin/documentos', methods=['GET'])
+@login_required
 def admin_documentos_listar():
     arquivos = [f for f in os.listdir(PASTA_PDFS) if f.endswith('.pdf')]
     mensagem = request.args.get('mensagem')
     return render_template('admin_documentos.html', arquivos=arquivos, mensagem=mensagem)
 
 @app.route('/admin/upload_pdf', methods=['POST'])
+@login_required
 def upload_pdf():
     if 'pdf' not in request.files:
         return redirect(url_for('admin_documentos_listar', mensagem="Nenhum arquivo enviado."))
     file = request.files['pdf']
     if file.filename == '':
-        return redirect(url_for('admin_documentos_listar', mensagem=" Nome de arquivo inválido."))
+        return redirect(url_for('admin_documentos_listar', mensagem="Nome de arquivo inválido."))
 
     filename = secure_filename(file.filename)
     file.save(os.path.join(PASTA_PDFS, filename))
@@ -252,50 +266,49 @@ def upload_pdf():
     return redirect(url_for('admin_documentos_listar', mensagem="PDF enviado com sucesso!"))
 
 @app.route('/admin/documentos/excluir/<nome>', methods=['POST'])
+@login_required
 def admin_documentos_excluir(nome):
     caminho = os.path.join(PASTA_PDFS, nome)
     if os.path.exists(caminho):
         os.remove(caminho)
         return redirect(url_for('admin_documentos_listar', mensagem="Documento excluído com sucesso!"))
-    return redirect(url_for('admin_documentos_listar', mensagem=" Documento não encontrado."))
-
+    return redirect(url_for('admin_documentos_listar', mensagem="Documento não encontrado."))
 
 # ---------------- OUTRAS TELAS ---------------- #
-
 @app.route('/calculadora')
+@login_required
 def calculadora():
     return render_template('calculadora.html')
 
-#COMPONENTES DA LIGA
 @app.route('/componentes')
+@login_required
 def componentes():
     return render_template('componentes_liga.html')
 
-
 # ---------------- BULÁRIO ---------------- #
 medicamentos = []
+
 @app.route('/bulario')
+@login_required
 def bulario():
     busca = request.args.get('busca', '').lower()
-    filtro = request.args.get('filtro', 'comercial')  # padrão: nome comercial
+    filtro = request.args.get('filtro', 'comercial')
 
     resultados = medicamentos
-
     if busca:
         if filtro == 'doenca':
             resultados = [m for m in medicamentos if busca in m.get("doencas_relacionadas", "").lower()]
         elif filtro == 'cientifico':
             resultados = [m for m in medicamentos if busca in m.get("nome_cientifico", "").lower()]
-        else:  # comercial
+        else:
             resultados = [m for m in medicamentos if busca in m.get("nome_comercial", "").lower()]
 
     return render_template('bulario.html', medicamentos=resultados, busca=busca, filtro=filtro)
 
 # ---------------- DOCUMENTOS (PDF) ---------------- #
-
 @app.route('/documentos')
+@login_required
 def documentos():
-    # Busca por nome de arquivo
     busca = request.args.get('busca', '').lower()
     arquivos = [f for f in os.listdir(PASTA_PDFS) if f.endswith('.pdf')]
 
@@ -304,18 +317,17 @@ def documentos():
 
     return render_template('documentos.html', arquivos=arquivos)
 
-#ABRIR PDF
 @app.route('/abrir_pdf/<nome>')
+@login_required
 def abrir_pdf(nome):
     return send_from_directory(PASTA_PDFS, nome)
 
-#GERAR THUMBNAIL DO PDF
 @app.route('/thumb/<nome>')
+@login_required
 def thumb(nome):
     caminho_pdf = os.path.join(PASTA_PDFS, nome)
     caminho_thumb = os.path.join(PASTA_THUMBS, f"{nome}.png")
 
-    # Gera a miniatura se ainda não existir
     if not os.path.exists(caminho_thumb):
         paginas = convert_from_path(
             caminho_pdf,
@@ -330,24 +342,20 @@ def thumb(nome):
 
 # ---------------- CALENDÁRIO ---------------- #
 
-# ROTA CALENDARIO HTML
+#Carrega calendario
 @app.route('/calendario')
+@login_required
 def calendario():
     return render_template('calendario.html')
 
-# ---- API: LISTAR EVENTOS POR MÊS ---- #
-
-# ---- API: LISTAR EVENTOS POR MÊS ---- #
+#Lista todas palestras
 @app.route('/api/eventos', methods=['GET'])
+@login_required
 def listar_eventos():
-    # Recebe ano e mês da URL
     year = request.args.get('year')
     month = request.args.get('month')
-
-    # Busca todos os eventos do banco
     eventos_db = Palestra.query.all()
 
-    # Converte para lista de dicionários
     eventos = [
         {
             "id": e.id,
@@ -358,44 +366,53 @@ def listar_eventos():
         for e in eventos_db
     ]
 
-    # Filtra por ano e mês se fornecidos
     if year and month:
         filtrados = [e for e in eventos if e["date"].startswith(f"{year}-{month.zfill(2)}")]
         return jsonify(filtrados)
 
     return jsonify(eventos)
 
-
 # ---- API: INSCRIÇÃO EM EVENTO ---- #
 
+#Se inscreve em um evento, preenchendo manualmente e-mail e user( aqui daria para puxar do "usuario.e-mail" que mantem na session )
 @app.route('/api/eventos/<int:evento_id>/inscrever', methods=['POST'])
+@login_required
 def inscrever_evento(evento_id):
-    # Busca evento no banco
     evento = Palestra.query.get(evento_id)
-    if not evento:
-        return jsonify({"status": "erro", "mensagem": "Evento não encontrado."}), 404
-    
-    # Recebe dados do formulário ou JSON
-    nome = request.form.get('nome') or (request.json.get('nome') if request.is_json else None)
-    email = request.form.get('email') or (request.json.get('email') if request.is_json else None)
+    if not evento:                                                                    # Confere se a palestra existe
+        return jsonify({"status": "erro", "mensagem": "Evento não encontrado."}), 404 # Se não existe retorna
 
-    # Validação básica
-    if not nome or not email:
-        return jsonify({"status": "erro", "mensagem": "Nome e e-mail são obrigatórios."}), 400
+    nome = request.form.get('nome') or (request.json.get('nome') if request.is_json else None) # Puxa nome com base no que foi preenchido
+    email = request.form.get('email') or (request.json.get('email') if request.is_json else None) # Puxa e-mail com base no que for preenchido
 
-    # Cria e salva nova inscrição
-    inscricao_existente = Inscricao.query.filter_by(email=email, palestra_id=evento_id).first()
-    if inscricao_existente:
-        return jsonify({"status": "erro", "mensagem": "Você já está inscrito."}), 409
+    if not nome or not email:                                                                  #Se não preencherem
+        return jsonify({"status": "erro", "mensagem": "Nome e e-mail são obrigatórios."}), 400 #Erro pois esta vazio
+
+    inscricao_existente = Inscricao.query.filter_by(email=email, palestra_id=evento_id).first() # Caso já exista uma inscricao no DB igual a esta
+    if inscricao_existente:                                                                         
+        return jsonify({"status": "erro", "mensagem": "Você já está inscrito."}), 409          # Retorna erro
 
     nova_inscricao = Inscricao(nome=nome, email=email, palestra_id=evento_id)
     db.session.add(nova_inscricao)
     db.session.commit()
 
-    return jsonify({"status": "ok", "mensagem": f"Inscrição confirmada em: {evento.title}!"})
+    return jsonify({"status": "ok", "mensagem": f"Inscrição confirmada em: {evento.title}!"}) # Caso não commitamos no db a att e confirmamos ao cliente
+
+# ---------------Rota para usuario comum consultar em quais eventos ele esta inscrito ----------------#
+@app.route('/api/usuario/<string:email>/inscricoes', methods=['GET'])
+@login_required
+def eventos_do_usuario(email):
+    inscricoes = Inscricao.query.filter_by(email=email.strip().lower()).all()
+    eventos = [{"evento_id": i.palestra_id, "nome_evento": i.palestra.title} for i in inscricoes]
+    return jsonify({
+        "status": "ok",
+        "email": email,
+        "quantidade": len(eventos),
+        "eventos": eventos
+    })
 
 # ---------------- MAIN ---------------- #
-
-# Inicia o servidor Flask em modo debug
 if __name__ == '__main__':
     app.run(debug=True)
+
+
