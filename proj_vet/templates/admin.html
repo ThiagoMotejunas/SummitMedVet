@@ -2,47 +2,45 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Painel do Administrador</title>
+  <title>Central do Administrador</title>
   <link rel="stylesheet" href="/static/style_admin.css">
 </head>
-<body>
-  <div class="admin-container">
-    <h1>Painel do Administrador</h1>
-    {% if mensagem %}
+<body class="central-body">
+  <div class="central-container" id="central-box">
+
+    <!-- Lado esquerdo com logo e mensagem -->
+    <div class="central-esquerda">
+      <img src="https://cdn-icons-png.flaticon.com/128/3737/3737701.png" alt="Logo do Sistema" class="central-logo">
+      <p class="central-boasvindas">Painel de Administração</p>
+    </div>
+
+    <!-- Lado direito com funcionalidades -->
+    <div class="central-direita">
+      <h1 class="central-titulo">Central do Administrador</h1>
+
+      {% if mensagem %}
         <div class="alert {% if tipo == 'error' %}error{% endif %}">{{ mensagem }}</div>
-    {% endif %}
+      {% endif %}
 
-    <section>
-      <h2>Gerenciar Palestras</h2>
-      <form action="/admin/palestras" method="POST">
-        <input type="text" name="titulo" placeholder="Título da palestra" required>
-        <input type="date" name="data" required>
-        <textarea name="descricao" placeholder="Descrição"></textarea>
-        <button type="submit">Adicionar Palestra</button>
-      </form>
-    </section>
+      <div class="funcionalidades-grid">
+        <a href="/admin/palestras" class="func-card">
+          <h2>Gerenciar Palestras</h2>
+          <p>Cadastre, edite e exclua palestras.</p>
+        </a>
 
-    <section>
-      <h2>Gerenciar Documentos</h2>
-      <form action="/admin/upload_pdf" method="POST" enctype="multipart/form-data">
-        <input type="file" name="pdf" accept="application/pdf" required>
-        <button type="submit">Enviar PDF</button>
-      </form>
-    </section>
+        <a href="/admin/medicamentos" class="func-card">
+          <h2>Gerenciar Bulário</h2>
+          <p>Cadastre, edite e exclua medicamentos veterinários.</p>
+        </a>
 
-    <section>
-      <h2>Gerenciar Bulário (Medicamentos)</h2>
-      <form action="/admin/medicamentos" method="POST">
-        <input type="text" name="nome_comercial" placeholder="Nome Comercial" required>
-        <input type="text" name="nome_cientifico" placeholder="Nome Científico" required>
-        <input type="text" name="dosagem_geral" placeholder="Dosagem Geral" required>
-        <input type="text" name="dosagem_doenca" placeholder="Dosagem por Doença">
-        <input type="text" name="doencas_relacionadas" placeholder="Doenças Relacionadas">
-        <button type="submit">Cadastrar Medicamento</button>
-      </form>
-    </section>
+        <a href="/admin/documentos" class="func-card">
+          <h2>Gerenciar Documentos</h2>
+          <p>Envie, edite e exclua PDFs.</p>
+        </a>
+      </div>
 
-    <a href="/central" class="btn-voltar">Ir ao Menu</a>
+      <a href="/central" class="btn-voltar">Ir para Menu Principal</a>
+    </div>
   </div>
 </body>
 </html>

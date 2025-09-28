@@ -1,9 +1,11 @@
-from flask import Flask, render_template, send_from_directory, send_file, jsonify, request, redirect, url_for
+from flask import Flask, render_template, send_from_directory, send_file, jsonify, request, redirect, url_for, flash
+import psycopg2
 import os
 from pdf2image import convert_from_path
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
+app.secret_key = "minha_chave_super_secreta_123"
 
 # Pastas do projeto
 PASTA_PDFS = os.path.join(os.path.dirname(__file__), 'pdfs')
@@ -43,6 +45,13 @@ def cadastro():
 def admin():
     return render_template('admin.html')
 
+# ---------------- ADMIN  PALESTRAS ---------------- #
+
+@app.route('/admin/palestras', methods=['GET'])
+def admin_palestras_listar():
+    mensagem = request.args.get('mensagem')
+    return render_template('admin_palestras.html', eventos=eventos, mensagem=mensagem)
+
 @app.route('/admin/palestras', methods=['POST'])
 def admin_palestras():
     titulo = request.form.get('titulo')
@@ -52,20 +61,180 @@ def admin_palestras():
     novo_id = max([e["id"] for e in eventos]) + 1 if eventos else 1
     eventos.append({"id": novo_id, "title": titulo, "date": data, "descricao": descricao})
 
-    return render_template('admin.html', mensagem="Palestra adicionada com sucesso!", eventos=eventos)
+    # redireciona para o GET, passando mensagem via querystring
+    return redirect(url_for('admin_palestras_listar', mensagem="Palestra adicionada com sucesso!"))
+
+@app.route('/admin/palestras/editar/<int:evento_id>', methods=['GET', 'POST'])
+def admin_palestras_editar(evento_id):
+    evento = next((e for e in eventos if e["id"] == evento_id), None)
+    if not evento:
+        return redirect(url_for('admin_palestras_listar', mensagem=" Palestra não encontrada."))
+
+    if request.method == 'POST':
+        evento["title"] = request.form.get('titulo')
+        evento["date"] = request.form.get('data')
+        evento["descricao"] = request.form.get('descricao')
+        return redirect(url_for('admin_palestras_listar', mensagem="Palestra editada com sucesso!"))
+
+    # GET → renderiza tela de edição
+    return render_template('admin_palestras.html', evento=evento)
+
+@app.route('/admin/palestras/excluir/<int:evento_id>', methods=['POST'])
+def admin_palestras_excluir(evento_id):
+    global eventos
+    eventos = [e for e in eventos if e["id"] != evento_id]
+    return redirect(url_for('admin_palestras_listar', mensagem="Palestra excluída com sucesso!"))
+
+# ---------------- ADMIN  BULÁRIO (MEDICAMENTOS) ---------------- #
+@app.route('/admin/medicamentos', methods=['GET'])
+def admin_medicamentos_listar():
+    mensagem = request.args.get('mensagem')
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT id, nome_comercial, nome_cientifico, dosagem_geral, dosagem_doenca, doencas_relacionadas FROM bulario")
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    medicamentos = [
+        {
+            "id": r[0],
+            "nome_comercial": r[1],
+            "nome_cientifico": r[2],
+            "dosagem_geral": r[3],
+            "dosagem_doenca": r[4],
+            "doencas_relacionadas": r[5]
+        } for r in rows
+    ]
+
+    return render_template('admin_medicamentos.html', medicamentos=medicamentos, mensagem=mensagem)
+
+
+# conexão com PostgreSQL
+def get_db_connection():
+    conn = psycopg2.connect(
+        dbname="SisMedVet",
+        user="postgres",
+        password="Edu1Sal2",
+        host="localhost",
+        port="5432"
+    )
+    return conn
+
+@app.route('/admin/medicamentos', methods=['POST'])
+def admin_medicamentos_criar():
+    nome_comercial = request.form.get('nome_comercial')
+    nome_cientifico = request.form.get('nome_cientifico')
+    dosagem_geral = request.form.get('dosagem_geral')
+    dosagem_doenca = request.form.get('dosagem_doenca')
+    doencas_relacionadas = request.form.get('doencas_relacionadas')
+
+    dosagem_geral = float(dosagem_geral) if dosagem_geral else None
+    dosagem_doenca = float(dosagem_doenca) if dosagem_doenca else None
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        INSERT INTO bulario (nome_comercial, nome_cientifico, dosagem_geral, dosagem_doenca, doencas_relacionadas)
+        VALUES (%s, %s, %s, %s, %s)
+    """, (nome_comercial, nome_cientifico, dosagem_geral, dosagem_doenca, doencas_relacionadas))
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return redirect(url_for('admin_medicamentos_listar', mensagem="✅ Medicamento cadastrado com sucesso!"))
+
+
+@app.route('/admin/medicamentos/editar/<int:med_id>', methods=['POST'])
+def admin_medicamentos_editar(med_id):
+    nome_comercial = request.form.get('nome_comercial')
+    nome_cientifico = request.form.get('nome_cientifico')
+    dosagem_geral = request.form.get('dosagem_geral')
+    dosagem_doenca = request.form.get('dosagem_doenca')
+    doencas_relacionadas = request.form.get('doencas_relacionadas')
+
+    # Converte valores numéricos corretamente
+    dosagem_geral = float(dosagem_geral) if dosagem_geral else None
+    dosagem_doenca = float(dosagem_doenca) if dosagem_doenca else None
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        UPDATE bulario
+        SET nome_comercial = %s,
+            nome_cientifico = %s,
+            dosagem_geral = %s,
+            dosagem_doenca = %s,
+            doencas_relacionadas = %s
+        WHERE id = %s
+    """, (nome_comercial, nome_cientifico, dosagem_geral, dosagem_doenca, doencas_relacionadas, med_id))
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return redirect(url_for('admin_medicamentos_listar', mensagem="Medicamento editado com sucesso!"))
+
+@app.route('/admin/medicamentos/excluir/<int:med_id>', methods=['POST'])
+def admin_medicamentos_excluir(med_id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("DELETE FROM bulario WHERE id = %s", (med_id,))
+    conn.commit()
+
+    cur.close()
+    conn.close()
+
+    return redirect(url_for('admin_medicamentos_listar', mensagem="Medicamento excluído com sucesso!"))
+
+# ---------------- ADMIN  DOCUMENTOS ---------------- #
+
+@app.route('/admin/documentos', methods=['GET'])
+def admin_documentos_listar():
+    arquivos = [f for f in os.listdir(PASTA_PDFS) if f.endswith('.pdf')]
+    tipo = request.args.get("tipo")
+    mensagem = request.args.get('mensagem')
+    return render_template('admin_documentos.html', arquivos=arquivos, mensagem=mensagem, tipo=tipo)
+
+# Tipos permitidos
+extensoes_permitidas = {"pdf"}
+
+# valida se o formato do arquivo para upload é .pdf
+def extensoes(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in extensoes_permitidas
 
 @app.route('/admin/upload_pdf', methods=['POST'])
 def upload_pdf():
-    if 'pdf' not in request.files:
-        return "Nenhum arquivo enviado", 400
-    file = request.files['pdf']
-    if file.filename == '':
-        return "Nome de arquivo inválido", 400
+    if "pdf" not in request.files:
+        flash("Nenhum arquivo enviado.")
+        return redirect(request.referrer)
 
-    filename = secure_filename(file.filename)
-    file.save(os.path.join(PASTA_PDFS, filename))
+    file = request.files["pdf"]
 
-    return render_template('admin.html', mensagem="✅ PDF enviado com sucesso!", tipo="success")
+    if file.filename == "":
+        flash("Nenhum arquivo selecionado.")
+        return redirect(request.referrer)
+
+    if file and extensoes(file.filename):
+        filepath = os.path.join(PASTA_PDFS, file.filename)
+        file.save(filepath)
+        flash("PDF salvo com sucesso!", "success")
+        return redirect(url_for("admin_documentos_listar", mensagem="PDF salvo com sucesso!"))
+    else:
+        return redirect(url_for("admin_documentos_listar", mensagem="Erro ao salvar PDF", tipo="error"))
+
+
+@app.route('/admin/documentos/excluir/<nome>', methods=['POST'])
+def admin_documentos_excluir(nome):
+    caminho = os.path.join(PASTA_PDFS, nome)
+    if os.path.exists(caminho):
+        os.remove(caminho)
+        return redirect(url_for('admin_documentos_listar', mensagem="Documento excluído com sucesso!"))
+    return redirect(url_for('admin_documentos_listar', mensagem=" Documento não encontrado."))
+
 
 # ---------------- OUTRAS TELAS ---------------- #
 
@@ -81,45 +250,59 @@ def calculadora():
 def componentes():
     return render_template('componentes_liga.html')
 
+
 # ---------------- BULÁRIO ---------------- #
-medicamentos = []
+
 @app.route('/bulario')
 def bulario():
     busca = request.args.get('busca', '').lower()
-    filtro = request.args.get('filtro', 'comercial')  # padrão: nome comercial
+    filtro = request.args.get('filtro', 'comercial')
 
-    resultados = medicamentos
+    conn = get_db_connection()
+    cur = conn.cursor()
 
     if busca:
         if filtro == 'doenca':
-            resultados = [m for m in medicamentos if busca in m.get("doencas_relacionadas", "").lower()]
+            cur.execute("""
+                SELECT id, nome_comercial, nome_cientifico, dosagem_geral, dosagem_doenca, doencas_relacionadas
+                FROM bulario
+                WHERE LOWER(COALESCE(doencas_relacionadas, '')) LIKE %s
+            """, (f"%{busca}%",))
         elif filtro == 'cientifico':
-            resultados = [m for m in medicamentos if busca in m.get("nome_cientifico", "").lower()]
-        else:  # comercial
-            resultados = [m for m in medicamentos if busca in m.get("nome_comercial", "").lower()]
+            cur.execute("""
+                SELECT id, nome_comercial, nome_cientifico, dosagem_geral, dosagem_doenca, doencas_relacionadas
+                FROM bulario
+                WHERE LOWER(COALESCE(nome_cientifico, '')) LIKE %s
+            """, (f"%{busca}%",))
+        else:  # comercial (default)
+            cur.execute("""
+                SELECT id, nome_comercial, nome_cientifico, dosagem_geral, dosagem_doenca, doencas_relacionadas
+                FROM bulario
+                WHERE LOWER(COALESCE(nome_comercial, '')) LIKE %s
+            """, (f"%{busca}%",))
+    else:
+        cur.execute("""
+            SELECT id, nome_comercial, nome_cientifico, dosagem_geral, dosagem_doenca, doencas_relacionadas
+            FROM bulario
+        """)
 
-    return render_template('bulario.html', medicamentos=resultados, busca=busca, filtro=filtro)
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
 
+    medicamentos = [
+        {
+            "id": r[0],
+            "nome_comercial": r[1],
+            "nome_cientifico": r[2],
+            "dosagem_geral": r[3],
+            "dosagem_doenca": r[4],
+            "doencas_relacionadas": r[5]
+        } for r in rows
+    ]
 
-@app.route('/admin/medicamentos', methods=['POST'])
-def admin_medicamentos():
-    nome_comercial = request.form.get('nome_comercial')
-    nome_cientifico = request.form.get('nome_cientifico')
-    dosagem_geral = request.form.get('dosagem_geral')
-    dosagem_doenca = request.form.get('dosagem_doenca')
-    doencas_relacionadas = request.form.get('doencas_relacionadas')
+    return render_template('bulario.html', medicamentos=medicamentos, busca=busca, filtro=filtro)
 
-    novo_id = len(medicamentos) + 1
-    medicamentos.append({
-        "id": novo_id,
-        "nome_comercial": nome_comercial,
-        "nome_cientifico": nome_cientifico,
-        "dosagem_geral": dosagem_geral,
-        "dosagem_doenca": dosagem_doenca,
-        "doencas_relacionadas": doencas_relacionadas
-    })
-
-    return render_template('admin.html', mensagem="Medicamento cadastrado com sucesso!", tipo="success", medicamentos=medicamentos)
 
 # ---------------- DOCUMENTOS (PDF) ---------------- #
 
