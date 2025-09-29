@@ -111,17 +111,6 @@ def admin_medicamentos_listar():
     return render_template('admin_medicamentos.html', medicamentos=medicamentos, mensagem=mensagem)
 
 
-# conexão com PostgreSQL
-def get_db_connection():
-    conn = psycopg2.connect(
-        dbname="SisMedVet",
-        user="postgres",
-        password="Edu1Sal2",
-        host="localhost",
-        port="5432"
-    )
-    return conn
-
 @app.route('/admin/medicamentos', methods=['POST'])
 def admin_medicamentos_criar():
     nome_comercial = request.form.get('nome_comercial')
@@ -379,3 +368,4 @@ def inscrever_evento(evento_id):
 
 if __name__ == '__main__':
     app.run(debug=True)
+
