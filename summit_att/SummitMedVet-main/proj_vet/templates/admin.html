@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Central do Administrador</title>
+  <link rel="stylesheet" href="/static/style_admin.css">
+</head>
+<body class="central-body">
+  <div class="central-container" id="central-box">
+
+    <!-- Lado esquerdo com logo e mensagem -->
+    <div class="central-esquerda">
+      <img src="https://cdn-icons-png.flaticon.com/128/3737/3737701.png" alt="Logo do Sistema" class="central-logo">
+      <p class="central-boasvindas">Painel de Administração</p>
+    </div>
+
+    <!-- Lado direito com funcionalidades -->
+    <div class="central-direita">
+      <h1 class="central-titulo">Central do Administrador</h1>
+
+      {% if mensagem %}
+        <div class="alert {% if tipo == 'error' %}error{% endif %}">{{ mensagem }}</div>
+      {% endif %}
+
+      <div class="funcionalidades-grid">
+        <a href="/admin/palestras" class="func-card">
+          <h2>Gerenciar Palestras</h2>
+          <p>Cadastre, edite e exclua palestras.</p>
+        </a>
+
+        <a href="/admin/medicamentos" class="func-card">
+          <h2>Gerenciar Bulário</h2>
+          <p>Cadastre, edite e exclua medicamentos veterinários.</p>
+        </a>
+
+        <a href="/admin/documentos" class="func-card">
+          <h2>Gerenciar Documentos</h2>
+          <p>Envie, edite e exclua PDFs.</p>
+        </a>
+      </div>
+
+      <a href="/central" class="btn-voltar">Ir para Menu Principal</a>
+    </div>
+  </div>
+</body>
+</html>
