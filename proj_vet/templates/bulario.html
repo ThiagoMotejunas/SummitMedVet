@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Bulário Veterinário</title>
+  <link rel="stylesheet" href="/static/style_bulario.css">
+</head>
+<body class="bulario-body">
+  <div class="bulario-container">
+
+    <h1 class="bulario-titulo">Bulário Veterinário</h1>
+
+    <!-- Formulário de busca -->
+    <form method="GET" action="/bulario" class="bulario-form">
+      <select name="filtro" class="bulario-select">
+        <option value="comercial" {% if filtro == 'comercial' %}selected{% endif %}>Buscar por Nome Comercial</option>
+        <option value="cientifico" {% if filtro == 'cientifico' %}selected{% endif %}>Buscar por Nome Científico</option>
+        <option value="doenca" {% if filtro == 'doenca' %}selected{% endif %}>Buscar por Doença</option>
+      </select>
+      <input type="text" name="busca" placeholder="Digite sua busca..." value="{{ busca }}" class="bulario-input">
+      <button type="submit" class="bulario-btn">Buscar</button>
+    </form>
+
+    <!-- Lista de medicamentos -->
+    <section class="lista-medicamentos">
+        <h2>Medicamentos Cadastrados</h2>
+
+        <div class="meds-grid">
+            {% for med in medicamentos %}
+            <div class="med-card">
+                <div class="med-card-content">
+                <h3>{{ med.nome_comercial }}</h3>
+                <p><em>{{ med.nome_cientifico }}</em></p>
+                <p><strong>Dosagem Geral:</strong> {{ med.dosagem_geral }}</p>
+                {% if med.dosagem_doenca %}
+                    <p><strong>Dosagem por Doença:</strong> {{ med.dosagem_doenca }}</p>
+                {% endif %}
+                {% if med.doencas_relacionadas %}
+                    <p><strong>Doenças:</strong> {{ med.doencas_relacionadas }}</p>
+                {% endif %}
+                </div>
+            </div>
+            {% else %}
+            <p>Nenhum medicamento encontrado.</p>
+            {% endfor %}
+        </div>
+    </section>
+
+    <a href="/central" class="btn-voltar">Voltar ao Menu</a>
+  </div>
+</body>
+</html>

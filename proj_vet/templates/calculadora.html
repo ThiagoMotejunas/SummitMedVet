@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Calculadora de Doses</title>
+  <link rel="stylesheet" href="/static/style_calculadora.css">
+</head>
+<body class="calc-body">
+  <div class="calc-container">
+
+        <h1 class="calc-titulo">Calculadora de Doses</h1>
+
+        <form id="form-calculo" class="calc-form">
+            <div class="linha-dupla">
+                <div class="form-group coluna-esquerda">
+                    <label for="medicamento">Nome do Fármaco (opcional):</label>
+                    <input type="text" id="medicamento" name="medicamento" placeholder="Ex: Amoxicilina">
+                </div>
+
+                <div class="form-group coluna-direita">
+                    <label for="dosagem">Dosagem (mg/kg):</label>
+                    <input type="number" id="dosagem" name="dosagem" value="" required>
+                </div>
+            </div>
+
+            <div class="linha-dupla">
+                <div class="form-group coluna-esquerda">
+                    <label for="peso">Peso do animal (kg):</label>
+                    <input type="number" id="peso" name="peso" value="" required>
+                </div>
+
+                <div class="form-group coluna-direita">
+                    <label for="volume">Concentração (mg/mL ou mg/cp):</label>
+                    <input type="number" id="volume" name="volume" value="" required>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-calcular">CALCULAR</button>
+        </form>
+
+        <div id="resultado" class="calc-resultado" style="display: none;">
+        <h2>Resultado:</h2>
+        <p><strong>Apresentação Líquida:</strong> Administrar <span id="ml"></span> mL</p>
+        <p><strong>Apresentação em Comprimido:</strong> Administrar <span id="comprimido"></span> comprimido(s)</p>
+        </div>
+
+        <div class="calc-aviso">
+        <p><strong>Atenção:</strong> Esta calculadora é uma ferramenta de auxílio. A prescrição e administração de medicamentos devem ser sempre supervisionadas por um Médico Veterinário responsável.</p>
+        </div>
+
+        <a href="/central" class="btn-voltar">Voltar ao Menu</a>
+  </div>
+
+  <script>
+    const form = document.getElementById('form-calculo');
+    const resultado = document.getElementById('resultado');
+    const mlSpan = document.getElementById('ml');
+    const comprimidoSpan = document.getElementById('comprimido');
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const dosagem = parseFloat(document.getElementById('dosagem').value);
+      const peso = parseFloat(document.getElementById('peso').value);
+      const volume = parseFloat(document.getElementById('volume').value);
+
+      const doseTotal = dosagem * peso;
+      const concentracao = dosagem / volume; 
+      const ml = (doseTotal / concentracao).toFixed(2);
+      const comprimido = (doseTotal / 100).toFixed(2); // assume 100mg por comprimido
+
+      mlSpan.textContent = ml;
+      comprimidoSpan.textContent = comprimido;
+      resultado.style.display = 'block';
+    });
+  </script>
+</body>
+</html>

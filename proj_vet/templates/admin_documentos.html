@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Gerenciar Documentos</title>
+  <link rel="stylesheet" href="/static/style_admin_documentos.css">
+</head>
+<body class="admin-docs-body">
+  <div class="admin-docs-container">
+    <h1 class="admin-docs-titulo">Gerenciar Documentos (PDFs)</h1>
+
+    {% if mensagem %}
+      <div class="alert {% if tipo == 'error' %}error{% endif %}">{{ mensagem }}</div>
+    {% endif %}
+
+    <!-- Upload de PDF -->
+    <section class="docs-section">
+      <h2 class="section-title">Enviar Novo Documento</h2>
+      <form action="/admin/upload_pdf" method="POST" enctype="multipart/form-data" class="docs-form">
+        <input type="file" name="pdf" accept="application/pdf" required class="input-file">
+        <button type="submit" class="btn-primary">Enviar PDF</button>
+      </form>
+    </section>
+
+    <!-- Listagem de PDFs -->
+    <section class="docs-section">
+      <h2 class="section-title">Documentos Enviados</h2>
+      <table class="docs-table">
+        <thead>
+          <tr>
+            <th>Nome do Arquivo</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for arquivo in arquivos %}
+            <tr>
+              <td>{{ arquivo }}</td>
+              <td class="actions">
+                <a href="{{ url_for('abrir_pdf', nome=arquivo) }}" target="_blank" class="btn-ghost">Abrir</a>
+                <button type="button" class="btn-danger" onclick="openDeleteDocModal('{{ arquivo }}')">Excluir</button>
+              </td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="2" class="no-data">Nenhum documento enviado.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Modal de exclusão -->
+    <div id="deleteDocModal" class="modal hidden">
+      <div class="modal-content">
+        <span class="close-btn" onclick="closeDeleteDocModal()">&times;</span>
+        <h2>Excluir Documento</h2>
+        <p>Tem certeza que deseja excluir este documento?</p>
+        <form id="deleteDocForm" method="POST">
+          <button type="submit" class="btn-danger">Excluir</button>
+          <button type="button" class="btn-ghost" onclick="closeDeleteDocModal()">Cancelar</button>
+        </form>
+      </div>
+    </div>
+
+    <a href="/admin" class="btn-voltar">Voltar à Central do Admin</a>
+  </div>
+
+  <script>
+    function openDeleteDocModal(nome) {
+      document.getElementById('deleteDocForm').action = '/admin/documentos/excluir/' + nome;
+      document.getElementById('deleteDocModal').classList.remove('hidden');
+    }
+
+    function closeDeleteDocModal() {
+      document.getElementById('deleteDocModal').classList.add('hidden');
+    }
+  </script>
+</body>
+</html>

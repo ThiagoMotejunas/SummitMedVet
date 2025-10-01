@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Gerenciar Palestras</title>
+  <link rel="stylesheet" href="/static/style_admin_palestras.css">
+</head>
+<body class="admin-palestras-body">
+  <div class="admin-palestras-container">
+    <h1 class="admin-palestras-titulo">Gerenciar Palestras</h1>
+
+    {% if mensagem %}
+      <div class="alert {% if tipo == 'error' %}error{% endif %}">{{ mensagem }}</div>
+    {% endif %}
+
+    <!-- Formulário de cadastro -->
+    <section class="palestras-section">
+      <h2 class="section-title">Cadastrar Nova Palestra</h2>
+      <form action="/admin/palestras" method="POST" class="palestras-form">
+        <input type="text" name="titulo" placeholder="Título da palestra" required class="input-text">
+        <input type="date" name="data" required class="input-date">
+        <textarea name="descricao" placeholder="Descrição" class="textarea"></textarea>
+        <button type="submit" class="btn-primary">Adicionar Palestra</button>
+      </form>
+    </section>
+
+    <!-- Listagem de palestras -->
+    <section class="palestras-section">
+      <h2 class="section-title">Palestras Cadastradas</h2>
+      <table class="palestras-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Título</th>
+            <th>Data</th>
+            <th>Descrição</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for ev in eventos %}
+            <tr>
+              <td>{{ ev.id }}</td>
+              <td>{{ ev.title }}</td>
+              <td>{{ ev.date }}</td>
+              <td>{{ ev.descricao }}</td>
+              <td class="actions">
+                <!-- Botão de editar -->
+                <form action="/admin/palestras/editar/{{ ev.id }}" method="GET" class="form-inline">
+                    <button type="button" class="btn-ghost"
+                        onclick="openEditModal('{{ ev.id }}','{{ ev.title }}','{{ ev.date }}','{{ ev.descricao }}')">
+                        Editar
+                    </button>
+                </form>
+                <!-- Botão de excluir -->
+                <form action="/admin/palestras/excluir/{{ ev.id }}" method="POST" class="form-inline">
+                    <button type="button" class="btn-danger"
+                            onclick="openDeleteModal('{{ ev.id }}')">
+                    Excluir
+                    </button>
+                </form>
+              </td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="5" class="no-data">Nenhuma palestra cadastrada.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+
+<section class="palestras-section">
+  <h2 class="section-title">Inscrições Realizadas</h2>
+  <table class="palestras-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nome</th>
+        <th>Email</th>
+        <th>Palestra</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for ins in inscricoes %}
+        <tr>
+          <td>{{ ins.id }}</td>
+          <td>{{ ins.nome }}</td>
+          <td>{{ ins.email }}</td>
+          <td>{{ ins.palestra.title if ins.palestra else '---' }}</td>
+        </tr>
+      {% else %}
+        <tr>
+          <td colspan="4" class="no-data">Nenhuma inscrição encontrada.</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+
+    <!-- Modal de edição -->
+    <div id="editModal" class="modal hidden">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeModal()">&times;</span>
+        <h2>Editar Palestra</h2>
+        <form id="editForm" method="POST">
+        <input type="text" name="titulo" id="editTitulo" required>
+        <input type="date" name="data" id="editData" required>
+        <textarea name="descricao" id="editDescricao"></textarea>
+        <button type="submit" class="btn-primary">Salvar Alterações</button>
+        </form>
+    </div>
+    </div>
+    <script>
+        function openEditModal(id, titulo, data, descricao) {
+        document.getElementById('editForm').action = '/admin/palestras/editar/' + id;
+        document.getElementById('editTitulo').value = titulo;
+        document.getElementById('editData').value = data;
+        document.getElementById('editDescricao').value = descricao;
+        document.getElementById('editModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+        document.getElementById('editModal').classList.add('hidden');
+        }
+    </script>
+
+    <!-- Modal de exclusão -->
+    <div id="deleteModal" class="modal hidden">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeDeleteModal()">&times;</span>
+        <h2>Excluir Palestra</h2>
+        <p>Tem certeza que deseja excluir esta palestra?</p>
+        <form id="deleteForm" method="POST">
+        <button type="submit" class="btn-danger">Excluir</button>
+        <button type="button" class="btn-ghost" onclick="closeDeleteModal()">Cancelar</button>
+        </form>
+    </div>
+    </div>
+    <script>
+    function openDeleteModal(id) {
+    document.getElementById('deleteForm').action = '/admin/palestras/excluir/' + id;
+    document.getElementById('deleteModal').classList.remove('hidden');
+    }
+
+    function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.add('hidden');
+    }
+    </script>
+
+    <a href="/admin" class="btn-voltar">Voltar à Central do Admin</a>
+  </div>
+</body>
+</html>
