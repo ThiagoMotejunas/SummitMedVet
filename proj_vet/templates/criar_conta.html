@@ -17,14 +17,8 @@
     <!-- Lado direito com formulário -->
     <div class="criar-direita">
       <h1 class="criar-titulo">Criar Conta</h1>
-    
-      <!-- Aqui criei um bloco condicional onde ao receber a var "mensagem" do backend(ao tentar cadastrar), vai aparecer para o usuario -->
-      {% if mensagem %}
-        <div class="notificacao">{{ mensagem }}</div>
-      {% endif %}
 
-
-      <form method="POST" action="/criar_conta" class="criar-form" id="form-criar">
+      <form method="POST" action="/criar-conta" class="criar-form" id="form-criar">
         <div class="form-group">
           <input type="text" placeholder="Nome do usuário" id="nome" name="nome" class="form-input" required>
         </div>
@@ -40,8 +34,7 @@
             </div>
         </div>
 
-        <button type="submit" class="btn-criar" id="btn-criar">CADASTRAR</button>
-
+        <a href="/central" class="btn-criar" id="btn-criar">CADASTRAR</a>
       </form>
 
       <div class="criar-footer">

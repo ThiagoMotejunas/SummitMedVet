@@ -1,6 +1,2 @@
 flask
-flask_sqlalchemy
-flask_bcrypt
 pdf2image
-psycopg2-binary
-bcrypt
