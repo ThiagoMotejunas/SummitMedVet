@@ -70,35 +70,6 @@
       </table>
     </section>
 
-<section class="palestras-section">
-  <h2 class="section-title">Inscrições Realizadas</h2>
-  <table class="palestras-table">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Nome</th>
-        <th>Email</th>
-        <th>Palestra</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for ins in inscricoes %}
-        <tr>
-          <td>{{ ins.id }}</td>
-          <td>{{ ins.nome }}</td>
-          <td>{{ ins.email }}</td>
-          <td>{{ ins.palestra.title if ins.palestra else '---' }}</td>
-        </tr>
-      {% else %}
-        <tr>
-          <td colspan="4" class="no-data">Nenhuma inscrição encontrada.</td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</section>
-
-
     <!-- Modal de edição -->
     <div id="editModal" class="modal hidden">
     <div class="modal-content">
