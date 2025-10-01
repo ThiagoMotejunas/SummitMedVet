@@ -1,3 +1,0 @@
-flask
-pdf2image
-psycopg2
