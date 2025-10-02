@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>Calendário de Palestras</title>
+  <link rel="stylesheet" href="/static/style_calendario.css" />
+</head>
+<body class="cal-body">
+  <div class="cal-container">
+    <h1 class="cal-title">Calendário de Palestras</h1>
+ 
+    <div class="cal-header">
+      <button id="prevBtn" class="cal-nav">&larr;</button>
+      <div id="monthLabel" class="cal-month"></div>
+      <button id="nextBtn" class="cal-nav">&rarr;</button>
+    </div>
+ 
+    <div class="cal-legend">
+      <span class="dot event"></span><span>Dia com evento</span>
+    </div>
+ 
+    <div class="cal-grid">
+      <div class="dow">Dom</div>
+      <div class="dow">Seg</div>
+      <div class="dow">Ter</div>
+      <div class="dow">Qua</div>
+      <div class="dow">Qui</div>
+      <div class="dow">Sex</div>
+      <div class="dow">Sáb</div>
+    </div>
+ 
+    <div id="daysContainer" class="days"></div>
+ 
+    <a href="/central" class="btn-voltar">Voltar ao Menu</a>
+
+    <!-- Seção "Minhas Inscrições" movida para dentro do container -->
+    <div class="user-inscricoes">
+      <h2>Minhas Inscrições</h2>
+      <table class="user-table">
+        <thead>
+          <tr>
+            <th>Título</th>
+            <th>Data</th>
+            <th>Descrição</th>
+          </tr>
+        </thead>
+        <tbody id="userInscricoesBody">
+          <!-- preenchido via JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+ 
+ 
+  <!-- Modal de detalhes/inscrição -->
+  <div id="modal" class="modal hidden">
+    <div class="modal-content">
+      <button class="modal-close" id="closeModal">&times;</button>
+      <h2 id="modalDate"></h2>
+      <div id="eventList"></div>
+ 
+      <form id="inscricaoForm" class="inscricao-form">
+        <h3>Confirmar Inscrição</h3>
+        <input type="text" id="nome" placeholder="Seu nome" value="{{ user.nome }}" required />
+        <input type="email" id="email" placeholder="Seu e-mail" value="{{ user.email }}" required />
+        <button type="submit" class="btn-inscrever">Confirmar inscrição</button>
+      </form>
+    </div>
+  </div>
+ 
+  <script>
+    const monthLabel = document.getElementById('monthLabel');
+    const daysContainer = document.getElementById('daysContainer');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const modal = document.getElementById('modal');
+    const closeModal = document.getElementById('closeModal');
+    const modalDate = document.getElementById('modalDate');
+    const eventList = document.getElementById('eventList');
+    const inscricaoForm = document.getElementById('inscricaoForm');
+ 
+    let current = new Date();
+    let eventosCache = []; // eventos do mês atual
+    let selectedEventoId = null;
+    let selectedDateISO = null;
+ 
+    const monthNames = [
+      'Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+      'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'
+    ];
+ 
+    function pad2(n){ return n.toString().padStart(2,'0'); }
+ 
+    async function fetchEventos(year, month){
+      const res = await fetch(`/api/eventos?year=${year}&month=${pad2(month+1)}`);
+      return res.json();
+    }
+ 
+    async function renderCalendar(){
+      const year = current.getFullYear();
+      const month = current.getMonth();
+      monthLabel.textContent = `${monthNames[month]} de ${year}`;
+ 
+      eventsByDate = {};
+      eventosCache = await fetchEventos(year, month);
+      eventosCache.forEach(e => {
+        eventsByDate[e.date] = eventsByDate[e.date] || [];
+        eventsByDate[e.date].push(e);
+      });
+
+
+ 
+      daysContainer.innerHTML = '';
+ 
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      const startWeekDay = firstDay.getDay(); // 0 Dom ... 6 Sáb
+      const totalDays = lastDay.getDate();
+ 
+      // Espaços em branco antes do 1º dia
+      for(let i=0; i<startWeekDay; i++){
+        const cell = document.createElement('div');
+        cell.className = 'day empty';
+        daysContainer.appendChild(cell);
+      }
+ 
+      // Dias do mês
+      for(let d=1; d<=totalDays; d++){
+        const dateISO = `${year}-${pad2(month+1)}-${pad2(d)}`;
+        const cell = document.createElement('div');
+        cell.className = 'day';
+        cell.innerHTML = `<span class="num">${d}</span>`;
+ 
+        if(eventsByDate[dateISO]){
+            cell.classList.add('has-event');
+            // Mostra o título do primeiro evento diretamente no calendário
+            const evento = eventsByDate[dateISO][0];
+            const label = document.createElement('div');
+            label.className = 'event-label';
+            label.textContent = evento.title;
+            cell.appendChild(label);
+ 
+            // Clique abre modal com todos os eventos do dia
+            cell.addEventListener('click', () => openModal(dateISO, eventsByDate[dateISO]));
+        }
+ 
+        daysContainer.appendChild(cell);
+      }
+    }
+ 
+    async function fetchMinhasInscricoes(){
+      const res = await fetch('/api/minhas_inscricoes');
+      return res.json();
+    }
+ 
+    async function renderMinhasInscricoes(){
+      const inscricoes = await fetchMinhasInscricoes();
+      const tbody = document.getElementById('userInscricoesBody');
+      tbody.innerHTML = inscricoes.map(ev => `
+        <tr>
+          <td>${ev.title}</td>
+          <td>${new Date(ev.date).toLocaleDateString('pt-BR')}</td>
+          <td>${ev.descricao || ''}</td>
+        </tr>
+      `).join('') || `<tr><td colspan="3">Nenhuma inscrição encontrada.</td></tr>`;
+    }
+ 
+    async function preencherUsuario(){
+      const res = await fetch('/api/me');
+      const user = await res.json();
+      document.getElementById('nome').value = user.nome;
+      document.getElementById('email').value = user.email;
+    }
+    preencherUsuario();
+ 
+    async function buscarQuantidadeInscritos(eventoId) {
+  try {
+    const res = await fetch(`/api/eventos/${eventoId}/quantidade_inscritos`);
+    const data = await res.json();
+    return data.quantidade_inscritos || 0;
+  } catch (err) {
+    console.error('Erro ao buscar quantidade de inscritos:', err);
+    return 0;
+  }
+}
+ 
+ async function openModal(dateISO, eventos) {
+  selectedDateISO = dateISO;
+  modal.classList.remove('hidden');
+  modalDate.textContent = new Date(dateISO).toLocaleDateString('pt-BR');
+
+  if (eventos.length === 1) {
+    selectedEventoId = eventos[0].id;
+  } else {
+    selectedEventoId = null;
+  }
+
+  const htmlArray = await Promise.all(eventos.map(async e => {
+    const qtd = await buscarQuantidadeInscritos(e.id);
+    return `
+      <div class="event-info" style="padding: 15px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px;">
+        <div>
+          <strong>${e.title}</strong><br>
+          <small>${e.descricao || ''}</small><br><br>
+          <span class="inscritos">Inscrições confirmadas: ${qtd}</span>
+        </div>
+        ${eventos.length > 1 ? `<button class="btn-selecionar" data-id="${e.id}" style="margin-top: 10px; padding: 5px 10px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Selecionar para inscrição</button>` : ''}
+      </div>
+    `;
+  }));
+
+  eventList.innerHTML = htmlArray.join('');
+
+  // Ativa botão de seleção se houver múltiplos eventos
+  eventList.querySelectorAll('.btn-selecionar').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      selectedEventoId = parseInt(btn.getAttribute('data-id'));
+      await preencherUsuario();
+      inscricaoForm.classList.remove('hidden');
+    });
+  });
+
+  // Se houver apenas um evento, já mostra o formulário
+  if (eventos.length === 1) {
+    await preencherUsuario();
+    inscricaoForm.classList.remove('hidden');
+  }
+ 
+  // Se há múltiplos eventos, adiciona listeners aos botões de seleção
+  if(eventos.length > 1) {
+    eventList.querySelectorAll('.btn-selecionar').forEach(btn => {
+      btn.addEventListener('click', () => {
+        selectedEventoId = parseInt(btn.getAttribute('data-id'));
+        // Remove outros botões selecionados
+        eventList.querySelectorAll('.btn-selecionar').forEach(b => {
+          b.style.backgroundColor = '#007bff';
+          b.textContent = 'Selecionar para inscrição';
+        });
+        // Marca o botão atual como selecionado
+        btn.style.backgroundColor = '#28a745';
+        btn.textContent = 'Selecionado';
+      });
+    });
+  }
+}
+ 
+ 
+ 
+    function closeModalFn(){
+      modal.classList.add('hidden');
+      eventList.innerHTML = '';
+      selectedEventoId = null;
+      selectedDateISO = null;
+    }
+ 
+    prevBtn.addEventListener('click', () => {
+      current = new Date(current.getFullYear(), current.getMonth()-1, 1);
+      renderCalendar();
+    });
+ 
+    nextBtn.addEventListener('click', () => {
+      current = new Date(current.getFullYear(), current.getMonth()+1, 1);
+      renderCalendar();
+    });
+ 
+    closeModal.addEventListener('click', closeModalFn);
+    modal.addEventListener('click', (e) => {
+      if(e.target === modal) closeModalFn();
+    });
+ 
+    inscricaoForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const nome = document.getElementById('nome').value.trim();
+      const email = document.getElementById('email').value.trim();
+     
+      // Validações básicas
+      if(!selectedEventoId) {
+        alert('Por favor, selecione um evento primeiro.');
+        return;
+      }
+     
+      if(!nome) {
+        alert('Por favor, preencha seu nome.');
+        return;
+      }
+     
+      if(!email) {
+        alert('Por favor, preencha seu e-mail.');
+        return;
+      }
+     
+      // Validação básica de e-mail
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if(!emailRegex.test(email)) {
+        alert('Por favor, insira um e-mail válido.');
+        return;
+      }
+     
+      // Desabilita o botão durante o envio
+      const submitBtn = document.querySelector('#inscricaoForm button[type="submit"]');
+      const originalText = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Confirmando...';
+     
+      try {
+        const res = await fetch(`/api/eventos/${selectedEventoId}/inscrever`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nome, email })
+        });
+       
+        const data = await res.json();
+       
+        if(res.ok) {
+          alert(data.mensagem || 'Inscrição confirmada com sucesso!');
+          closeModalFn();
+         
+          // Atualiza as inscrições do usuário após confirmar
+          await renderMinhasInscricoes();
+          // Atualiza o calendário para mostrar a nova contagem de inscritos
+          await renderCalendar();
+        } else {
+          alert(data.mensagem || 'Erro ao confirmar inscrição. Tente novamente.');
+        }
+      } catch (error) {
+        console.error('Erro na requisição:', error);
+        alert('Erro de conexão. Verifique sua internet e tente novamente.');
+      } finally {
+        // Reabilita o botão
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
+    });
+ 
+    renderCalendar();
+    renderMinhasInscricoes();
+  </script>
+</body>
+</html>

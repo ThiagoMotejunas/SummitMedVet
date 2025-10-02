@@ -1,0 +1,284 @@
+body.cal-body {
+  margin: 0;
+  padding: 0;
+  background: #1e2939;
+  font-family: 'Segoe UI', sans-serif;
+  color: #fff;
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.cal-container {
+  width: 100%;
+  max-width: 1000px;
+  padding: 30px 20px 60px;
+  display: flex;
+  flex-direction: column; /* garante que tudo fique em coluna */
+  align-items: center;    /* centraliza horizontalmente */
+  gap: 20px;              /* espaço entre calendário e inscrições */
+}
+
+.cal-title {
+  text-align: center;
+  margin: 0 0 20px;
+  font-size: 28px;
+}
+
+.cal-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+
+.cal-month {
+  font-size: 20px;
+  font-weight: bold;
+  color: #ffffff;
+  min-width: 240px;
+  text-align: center;
+}
+
+.cal-nav {
+  background: #2c3e50;
+  color: #fff;
+  border: 1px solid #585858;
+  border-radius: 6px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+.cal-nav:hover { background: #3a4a5a; }
+
+.cal-legend {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  align-self: flex-start;
+  gap: 8px;
+  width: 100%;
+  margin: 10px 0 20px;
+  opacity: 0.9;
+}
+.dot {
+  width: 12px; height: 12px; border-radius: 50%; display: inline-block;
+}
+.dot.event { background: #50c878; }
+
+/* Cabeçalho dos dias da semana */
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;              /* espaço pequeno e uniforme */
+  margin-bottom: 6px;
+  width: 100%;           /* ocupa toda a largura disponível */
+}
+
+.dow {
+  text-align: center;
+  font-weight: bold;
+  color: #ffffff;
+}
+
+/* Grade dos dias */
+.days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  width: 100%;
+}
+
+/* Cada célula do calendário */
+.day {
+  background: #2c3e50;          
+  color: #ffffff;                  
+  border: 1px solid #3d3d3d;
+  border-radius: 8px;
+  height: 100px;                /* altura fixa */
+  position: relative;
+  padding: 6px;
+  transition: transform 0.1s ease, box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  overflow: hidden;
+}
+
+.day .num {
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 4px;
+  align-self: flex-end;
+}
+
+.day.empty { 
+  background: transparent;
+  border: none; 
+}
+
+/* Destaque de evento sem alterar largura */
+.day.has-event {
+  outline: 2px solid #4CAF50;
+  outline-offset: -2px;
+  cursor: pointer;
+}
+
+.day.has-event:hover { transform: scale(1.02); }
+
+/* Nome do evento dentro da célula */
+.event-label {
+  font-size: 12px;
+  font-weight: bold;
+  color: #4CAF50;
+  text-align: left;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-top: auto; /* joga para baixo da célula */
+}
+
+/* Botão voltar */
+.btn-voltar {
+  display: inline-block;
+  margin-top: 20px;
+  background-color: #0d223d;
+  color: white;
+  padding: 10px 16px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.btn-voltar:hover {
+  background-color: #071d3d;
+}
+
+/* Modal */
+.modal {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.modal.hidden { display: none; }
+
+.modal-content {
+  background: #2c3e50;
+  width: 100%; max-width: 520px;
+  border-radius: 10px;
+  padding: 18px;
+  position: relative;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+}
+
+.modal-close {
+  position: absolute; top: 8px; right: 10px;
+  background: transparent; color: #fff; border: none;
+  font-size: 24px; cursor: pointer;
+}
+
+.event-item {
+  background: #1f2a38;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 10px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+.btn-mini {
+  background: #4CAF50;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+
+.btn-mini:hover { background: #45a049; }
+
+.inscricao-form {
+  margin-top: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.inscricao-form input {
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #3d3d3d;
+  background: #fff;
+  color: #1e2939;
+}
+
+.btn-inscrever {
+  background: #4CAF50;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-inscrever:hover { background: #45a049; }
+
+/* Seção de inscrições do usuário - agora dentro do container */
+.user-inscricoes {
+  width: 100%;
+  margin-top: 30px; /* Aumentei a margem superior para dar mais espaço */
+}
+
+.user-inscricoes h2 {
+  text-align: center;
+  margin-bottom: 15px;
+  color: #ffffff;
+}
+
+.user-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.35);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.user-table th,
+.user-table td {
+  padding: 10px;
+  border-bottom: 1px solid #3a4a5a;
+  text-align: left;
+  color: #e9ecf1;
+}
+
+.user-table thead {
+  background: #223044;
+}
+
+/* Responsividade para dispositivos móveis */
+@media (max-width: 768px) {
+  .cal-container {
+    padding: 20px 15px 40px;
+  }
+  
+  .cal-title {
+    font-size: 24px;
+  }
+  
+  .day {
+    height: 80px;
+  }
+  
+  .user-table {
+    font-size: 14px;
+  }
+  
+  .user-table th,
+  .user-table td {
+    padding: 8px;
+  }
+}
+

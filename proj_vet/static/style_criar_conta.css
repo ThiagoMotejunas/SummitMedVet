@@ -1,0 +1,139 @@
+body.criar-body {
+  margin: 0;
+  padding: 0;
+  background-color: #364153;
+  font-family: 'Segoe UI', sans-serif;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.criar-container {
+  display: flex;
+  background-color: #e9ecf1;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 900px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.5);
+  overflow: hidden;
+  color: #fff;
+}
+
+.criar-esquerda {
+  flex: 1;
+  background-color: #1e2939;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  text-align: center;
+}
+
+.criar-logo {
+  width: 160px;
+  margin-bottom: 20px;
+}
+
+.criar-boasvindas {
+  font-size: 18px;
+  color: #e0e0e0;
+}
+
+.criar-direita {
+  flex: 1;
+  padding: 40px;
+}
+
+.criar-titulo {
+  text-align: center;
+  margin-bottom: 30px;
+  font-size: 24px;
+  color: #252f3f;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.form-input {
+  width: 100%;
+  padding: 10px;
+  border-color: #6b6b6b;
+  border: 1px solid;
+  border-radius: 6px;
+  background-color: #ffffff;
+  color: #5f5f5f;
+}
+
+.icone-olho {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  filter: grayscale(100%) brightness(0.6);  /* ícone do olho cinza */
+}
+
+.senha-wrapper {
+  position: relative;
+}
+
+.btn-criar {
+  display: inline-block;
+  text-align: center;
+  text-decoration: none;   /* remove sublinhado */
+  width: 100%;
+  padding: 12px;
+  background-color: #4CAF50;
+  border-radius: 6px;
+  color: white ;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.btn-criar:hover {
+  background-color: #45a049;
+  text-decoration: none;  
+  color: white !important;
+}
+
+.criar-footer {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.link-login {
+  color: #074db6;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.link-login:hover {
+  text-decoration: underline;
+}
+
+/* Essa parte adicionei para variavel da mensagem ficar conforme o padrão do css*/
+.notificacao {
+  background-color: #f0f4f8;           /* fundo suave para contraste */
+  border-left: 5px solid #4CAF50;      /* verde padrão do botão de sucesso */
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  border-radius: 6px;
+  font-weight: bold;
+  color: #1e2939;                      /* cor escura para legibilidade */
+  text-align: center;
+  box-shadow: 0 0 5px rgba(0,0,0,0.1); /* leve sombra para destaque */
+}

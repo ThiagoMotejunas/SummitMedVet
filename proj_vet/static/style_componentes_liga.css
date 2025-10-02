@@ -1,0 +1,83 @@
+body.liga-body {
+  margin: 0;
+  padding: 0;
+  background-color: #1e2838;
+  font-family: 'Segoe UI', sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  color: #fff;
+}
+
+.liga-container {
+  padding: 40px;
+  max-width: 1200px;
+  width: 100%;
+}
+
+.liga-titulo {
+  text-align: center;
+  margin-bottom: 40px;
+  font-size: 32px;
+  color: #f1f1f1;
+}
+
+.liga-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 2 coluna em uma linha no grid */
+  gap: 20px;
+}
+
+@media (max-width: 768px) {
+  .liga-grid {
+    grid-template-columns: 1fr; /* só uma coluna em telas pequenas */
+  }
+}
+
+.cargo-box {
+  background-color: #2c3e50; /* mesma cor para todos */
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 8px rgba(0,0,0,0.3);
+}
+
+.cargo-box h2 {
+  margin: 0;
+  font-size: 20px;
+  color: #ffffff;
+}
+
+.cargo-box hr {
+  border: none;
+  border-top: 1px solid #ffffff; /* linha verde abaixo do título */
+  margin: 10px 0 15px;
+}
+
+.cargo-box ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.cargo-box ul li {
+  margin-bottom: 6px;
+  font-size: 15px;
+}
+
+.btn-voltar {
+  display: block;
+  margin: 40px auto 0;
+  text-align: center;
+  background-color: #0d223d;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: bold;
+  width: 200px;
+}
+
+.btn-voltar:hover {
+  background-color: #071d3d;
+}

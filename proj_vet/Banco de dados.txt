@@ -1,0 +1,40 @@
+Bulário: 
+CREATE TABLE IF NOT EXISTS public.bulario (
+    id SERIAL PRIMARY KEY,
+    nome_comercial VARCHAR(100) NOT NULL,
+    nome_cientifico VARCHAR(100) NOT NULL,
+    dosagem_geral DOUBLE PRECISION NOT NULL,
+    dosagem_doenca DOUBLE PRECISION NOT NULL,
+    doencas_relacionadas VARCHAR(100) NOT NULL
+);
+
+Usuários:
+CREATE TABLE IF NOT EXISTS public.usuarios (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    email VARCHAR(120) NOT NULL UNIQUE,
+    senha VARCHAR(200) NOT NULL,
+    cargo INT NOT NULL
+);
+
+Palestras: 
+CREATE TABLE IF NOT EXISTS public.palestras (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(200) NOT NULL,
+    date DATE NOT NULL,
+    descricao TEXT
+);
+
+
+Inscrição: 
+CREATE TABLE IF NOT EXISTS public.inscricoes (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    email VARCHAR(120) NOT NULL,
+    palestra_id INT,
+    CONSTRAINT inscricoes_palestra_id_fkey 
+        FOREIGN KEY (palestra_id)
+        REFERENCES public.palestras (id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);

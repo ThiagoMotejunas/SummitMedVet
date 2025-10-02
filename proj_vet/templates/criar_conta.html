@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Criar Conta</title>
+  <link rel="stylesheet" href="/static/style_criar_conta.css">
+</head>
+<body class="criar-body">
+  <div class="criar-container" id="criar-box">
+
+    <!-- Lado esquerdo com logo e mensagem -->
+    <div class="criar-esquerda">
+      <img src="https://cdn-icons-png.flaticon.com/128/3737/3737701.png" alt="Logo do Sistema" class="criar-logo">
+      <p class="criar-boasvindas">Olá! Seja Bem-vindo ao Sistema de auxílio de veterinários!</p>
+    </div>
+
+    <!-- Lado direito com formulário -->
+    <div class="criar-direita">
+      <h1 class="criar-titulo">Criar Conta</h1>
+    
+      <!-- Aqui criei um bloco condicional onde ao receber a var "mensagem" do backend(ao tentar cadastrar), vai aparecer para o usuario -->
+      {% if mensagem %}
+        <div class="notificacao">{{ mensagem }}</div>
+      {% endif %}
+
+
+      <form method="POST" action="/criar_conta" class="criar-form" id="form-criar">
+        <div class="form-group">
+          <input type="text" placeholder="Nome do usuário" id="nome" name="nome" class="form-input" required>
+        </div>
+
+        <div class="form-group">
+          <input type="email" placeholder="Email do usuário" id="email" name="email" class="form-input" required>
+        </div>
+
+        <div class="form-group">
+            <div class="senha-wrapper">
+                <input type="password" placeholder="Senha do usuário" id="senha" name="senha" class="form-input" required>
+                <img src="https://cdn-icons-png.flaticon.com/128/8276/8276554.png" alt="Mostrar senha" id="toggleSenha" class="icone-olho">
+            </div>
+        </div>
+
+        <button type="submit" class="btn-criar" id="btn-criar">CADASTRAR</button>
+
+      </form>
+
+      <div class="criar-footer">
+        <a href="/cadastro" class="link-login">Já tem uma conta? Fazer login</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const toggleSenha = document.getElementById('toggleSenha');
+    const campoSenha = document.getElementById('senha');
+
+    toggleSenha.addEventListener('click', () => {
+        const tipoAtual = campoSenha.getAttribute('type');
+        const novoTipo = tipoAtual === 'password' ? 'text' : 'password';
+        campoSenha.setAttribute('type', novoTipo);
+
+        toggleSenha.style.opacity = 0;
+        setTimeout(() => {
+        toggleSenha.src = novoTipo === 'text'
+            ? 'https://cdn-icons-png.flaticon.com/128/8276/8276554.png'
+            : 'https://cdn-icons-png.flaticon.com/128/63/63568.png';
+        toggleSenha.style.opacity = 1;
+    }, 150);
+  });
+</script>
+</body>
+</html>
