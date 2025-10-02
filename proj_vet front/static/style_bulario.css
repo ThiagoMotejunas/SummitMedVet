@@ -1,0 +1,107 @@
+body.bulario-body {
+  margin: 0;
+  padding: 0;
+  background-color: #1e2939;
+  font-family: 'Segoe UI', sans-serif;
+  color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+}
+
+.bulario-container {
+  max-width: 1000px;
+  width: 100%;
+  padding: 40px;
+}
+
+.bulario-titulo {
+  text-align: center;
+  font-size: 28px;
+  margin-bottom: 40px;
+}
+
+/* Formulário de busca */
+.bulario-form {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 30px;
+}
+
+.bulario-select,
+.bulario-input {
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #333333;
+  background-color: #fff;
+  color: #1e2939;
+}
+
+.bulario-input {
+  flex: 1;
+}
+
+.bulario-btn {
+  padding: 10px 20px;
+  background-color: #4CAF50;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.bulario-btn:hover {
+  background-color: #45a049;
+}
+
+/* Grid de medicamentos */
+.meds-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.med-card {
+  background-color: #2c3e50;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.3);
+  transition: transform 0.2s ease;
+}
+
+.med-card:hover {
+  transform: scale(1.03);
+  background-color: #264b6d;
+}
+
+.med-card h3 {
+  margin: 0 0 5px;
+  font-size: 18px;
+  color: #ffffff;
+}
+
+.med-card p {
+  margin: 4px 0;
+  font-size: 14px;
+  color: #ddd;
+}
+
+/* Botão voltar */
+.btn-voltar {
+  display: block;
+  margin: 40px auto 0;
+  text-align: center;
+  background-color: #0d223d;
+  color: white;
+  padding: 12px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: bold;
+  width: 200px;
+}
+
+.btn-voltar:hover {
+  background-color: #071d3d;
+}

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Gerenciar Bulário</title>
+  <link rel="stylesheet" href="/static/style_admin_medicamentos.css">
+</head>
+<body class="admin-meds-body">
+  <div class="admin-meds-container">
+    <h1 class="admin-meds-titulo">Gerenciar Bulário (Medicamentos)</h1>
+
+    {% if mensagem %}
+      <div class="alert {% if tipo == 'error' %}error{% endif %}">{{ mensagem }}</div>
+    {% endif %}
+
+    <!-- Formulário de cadastro -->
+    <section class="meds-section">
+      <h2 class="section-title">Cadastrar Novo Medicamento</h2>
+      <form action="/admin/medicamentos" method="POST" class="meds-form">
+        <input type="text" name="nome_comercial" placeholder="Nome Comercial" required class="input-text">
+        <input type="text" name="nome_cientifico" placeholder="Nome Científico" required class="input-text">
+        <input type="text" name="dosagem_geral" placeholder="Dosagem Geral" required class="input-text">
+        <input type="text" name="dosagem_doenca" placeholder="Dosagem por Doença" class="input-text">
+        <input type="text" name="doencas_relacionadas" placeholder="Doenças Relacionadas" class="input-text">
+        <button type="submit" class="btn-primary">Adicionar Medicamento</button>
+      </form>
+    </section>
+
+    <!-- Listagem de medicamentos -->
+    <section class="meds-section">
+      <h2 class="section-title">Medicamentos Cadastrados</h2>
+      <table class="meds-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nome Comercial</th>
+            <th>Nome Científico</th>
+            <th>Dosagem Geral</th>
+            <th>Dosagem Doença</th>
+            <th>Doenças Relacionadas</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for med in medicamentos %}
+            <tr>
+              <td>{{ med.id }}</td>
+              <td>{{ med.nome_comercial }}</td>
+              <td>{{ med.nome_cientifico }}</td>
+              <td>{{ med.dosagem_geral }}</td>
+              <td>{{ med.dosagem_doenca }}</td>
+              <td>{{ med.doencas_relacionadas }}</td>
+              <td class="actions">
+                <!-- Botão de editar -->
+                <button type="button" class="btn-ghost"
+                  onclick="openEditMedModal('{{ med.id }}','{{ med.nome_comercial }}','{{ med.nome_cientifico }}','{{ med.dosagem_geral }}','{{ med.dosagem_doenca }}','{{ med.doencas_relacionadas }}')">
+                  Editar
+                </button>
+                <!-- Botão de excluir -->
+                <button type="button" class="btn-danger"
+                  onclick="openDeleteMedModal('{{ med.id }}')">
+                  Excluir
+                </button>
+              </td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="7" class="no-data">Nenhum medicamento cadastrado.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Modal de edição -->
+    <div id="editMedModal" class="modal hidden">
+      <div class="modal-content">
+        <span class="close-btn" onclick="closeEditMedModal()">&times;</span>
+        <h2>Editar Medicamento</h2>
+        <form id="editMedForm" method="POST">
+          <input type="text" name="nome_comercial" id="editNomeComercial" required>
+          <input type="text" name="nome_cientifico" id="editNomeCientifico" required>
+          <input type="text" name="dosagem_geral" id="editDosagemGeral" required>
+          <input type="text" name="dosagem_doenca" id="editDosagemDoenca">
+          <input type="text" name="doencas_relacionadas" id="editDoencasRelacionadas">
+          <button type="submit" class="btn-primary">Salvar Alterações</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal de exclusão -->
+    <div id="deleteMedModal" class="modal hidden">
+      <div class="modal-content">
+        <span class="close-btn" onclick="closeDeleteMedModal()">&times;</span>
+        <h2>Excluir Medicamento</h2>
+        <p>Tem certeza que deseja excluir este medicamento?</p>
+        <form id="deleteMedForm" method="POST">
+          <button type="submit" class="btn-danger">Excluir</button>
+          <button type="button" class="btn-ghost" onclick="closeDeleteMedModal()">Cancelar</button>
+        </form>
+      </div>
+    </div>
+
+    <a href="/admin" class="btn-voltar">Voltar à Central do Admin</a>
+  </div>
+
+  <script>
+    function openEditMedModal(id, nomeComercial, nomeCientifico, dosagemGeral, dosagemDoenca, doencasRelacionadas) {
+      document.getElementById('editMedForm').action = '/admin/medicamentos/editar/' + id;
+      document.getElementById('editNomeComercial').value = nomeComercial;
+      document.getElementById('editNomeCientifico').value = nomeCientifico;
+      document.getElementById('editDosagemGeral').value = dosagemGeral;
+      document.getElementById('editDosagemDoenca').value = dosagemDoenca;
+      document.getElementById('editDoencasRelacionadas').value = doencasRelacionadas;
+      document.getElementById('editMedModal').classList.remove('hidden');
+    }
+
+    function closeEditMedModal() {
+      document.getElementById('editMedModal').classList.add('hidden');
+    }
+
+    function openDeleteMedModal(id) {
+      document.getElementById('deleteMedForm').action = '/admin/medicamentos/excluir/' + id;
+      document.getElementById('deleteMedModal').classList.remove('hidden');
+    }
+
+    function closeDeleteMedModal() {
+      document.getElementById('deleteMedModal').classList.add('hidden');
+    }
+  </script>
+</body>
+</html>

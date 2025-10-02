@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Gerenciar Palestras</title>
+  <link rel="stylesheet" href="/static/style_admin_palestras.css">
+</head>
+<body class="admin-palestras-body">
+  <div class="admin-palestras-container">
+    <h1 class="admin-palestras-titulo">Gerenciar Palestras</h1>
+
+    <div id="alertBox" class="alert hidden"></div>
+
+    <section class="palestras-section">
+      <h2 class="section-title">Cadastrar Nova Palestra</h2>
+      <form id="createForm" class="palestras-form">
+        <input type="text" name="titulo" placeholder="Título da palestra" required class="input-text">
+        <input type="date" name="data" required class="input-date">
+        <textarea name="descricao" placeholder="Descrição" class="textarea"></textarea>
+        <button type="submit" class="btn-primary">Adicionar Palestra</button>
+      </form>
+    </section>
+
+    <section class="palestras-section">
+      <h2 class="section-title">Palestras Cadastradas</h2>
+      <table class="palestras-table">
+        <thead>
+          <tr>
+            <th>ID</th><th>Título</th><th>Data</th><th>Descrição</th><th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="palestrasBody"></tbody>
+      </table>
+    </section>
+
+    <section class="palestras-section">
+      <h2 class="section-title">Inscrições Realizadas</h2>
+      <table class="palestras-table">
+        <thead>
+          <tr><th>ID</th><th>Nome</th><th>Email</th><th>Palestra</th></tr>
+        </thead>
+        <tbody id="inscricoesBody"></tbody>
+      </table>
+    </section>
+
+    <!-- Modais -->
+    <div id="editModal" class="modal hidden">
+      <div class="modal-content">
+        <span class="close-btn" onclick="closeModal()">&times;</span>
+        <h2>Editar Palestra</h2>
+        <form id="editForm">
+          <input type="text" id="editTitulo" required>
+          <input type="date" id="editData" required>
+          <textarea id="editDescricao"></textarea>
+          <button type="submit" class="btn-primary">Salvar Alterações</button>
+        </form>
+      </div>
+    </div>
+
+    <div id="deleteModal" class="modal hidden">
+      <div class="modal-content">
+        <span class="close-btn" onclick="closeDeleteModal()">&times;</span>
+        <h2>Excluir Palestra</h2>
+        <p>Tem certeza?</p>
+        <div class="modal-actions">
+          <button id="confirmDeleteBtn" class="btn-danger">Excluir</button>
+          <button type="button" class="btn-ghost" onclick="closeDeleteModal()">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+    <a href="/admin" class="btn-voltar">Voltar à Central do Admin</a>
+  </div>
+
+  <script>
+    const alertBox = document.getElementById('alertBox');
+    const palestrasBody = document.getElementById('palestrasBody');
+    const inscricoesBody = document.getElementById('inscricoesBody');
+
+    let editingId = null;
+    let deletingId = null;
+
+    function showMessage(text, type='ok'){
+      alertBox.textContent = text;
+      alertBox.classList.remove('hidden','error');
+      if(type==='error') alertBox.classList.add('error');
+      setTimeout(()=>alertBox.classList.add('hidden'), 2500);
+    }
+
+    async function fetchEventos(){
+      const res = await fetch('/api/eventos');
+      return res.json();
+    }
+    async function fetchInscricoes(){
+      const res = await fetch('/api/inscricoes');
+      return res.json();
+    }
+
+    async function renderPalestras(){
+      const eventos = await fetchEventos();
+      if(!eventos.length){
+        palestrasBody.innerHTML = '<tr><td colspan="5" class="no-data">Nenhuma palestra cadastrada.</td></tr>';
+        return;
+      }
+      palestrasBody.innerHTML = eventos.map(ev => `
+        <tr>
+          <td>${ev.id}</td>
+          <td>${ev.title}</td>
+          <td>${ev.date}</td>
+          <td>${ev.descricao||''}</td>
+          <td class="actions">
+            <button class="btn-ghost" onclick="openEditModal(${ev.id})">Editar</button>
+            <button class="btn-danger" onclick="openDeleteModal(${ev.id})">Excluir</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function renderInscricoes(){
+      const ins = await fetchInscricoes();
+      if(!ins.length){
+        inscricoesBody.innerHTML = '<tr><td colspan="4" class="no-data">Nenhuma inscrição encontrada.</td></tr>';
+        return;
+      }
+      inscricoesBody.innerHTML = ins.map(i => `
+        <tr>
+          <td>${i.id}</td>
+          <td>${i.nome}</td>
+          <td>${i.email}</td>
+          <td>${i.palestra_title || '---'}</td>
+        </tr>
+      `).join('');
+    }
+
+    // Create (usa rota do back que você já tem)
+    document.getElementById('createForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const titulo = form.titulo.value.trim();
+      const data = form.data.value;
+      const descricao = form.descricao.value.trim();
+      if(!titulo || !data){ showMessage('Título e data obrigatórios','error'); return; }
+
+      // envia como form data para /admin/palestras (mesma rota que você já tem)
+      const fd = new FormData();
+      fd.append('titulo', titulo);
+      fd.append('data', data);
+      fd.append('descricao', descricao);
+
+      const res = await fetch('/admin/palestras', { method: 'POST', body: fd });
+      if(res.redirected){
+        await renderPalestras();
+        showMessage('Palestra cadastrada com sucesso!');
+        form.reset();
+        await renderInscricoes(); // caso queira ver efeitos
+      } else {
+        showMessage('Erro ao cadastrar','error');
+      }
+    });
+
+    // Edit
+    window.openEditModal = async function(id){
+      editingId = id;
+      const eventos = await fetchEventos();
+      const ev = eventos.find(x => x.id === id);
+      if(!ev) return;
+      document.getElementById('editTitulo').value = ev.title;
+      document.getElementById('editData').value = ev.date;
+      document.getElementById('editDescricao').value = ev.descricao||'';
+      document.getElementById('editModal').classList.remove('hidden');
+    };
+    document.getElementById('editForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if(!editingId) return;
+      const fd = new FormData();
+      fd.append('titulo', document.getElementById('editTitulo').value.trim());
+      fd.append('data', document.getElementById('editData').value);
+      fd.append('descricao', document.getElementById('editDescricao').value.trim());
+
+      const res = await fetch(`/admin/palestras/editar/${editingId}`, { method: 'POST', body: fd });
+      if(res.redirected){
+        showMessage('Palestra editada com sucesso!');
+        document.getElementById('editModal').classList.add('hidden');
+        editingId = null;
+        await renderPalestras();
+        await renderInscricoes();
+      } else {
+        showMessage('Erro ao editar','error');
+      }
+    });
+    function closeModal(){ document.getElementById('editModal').classList.add('hidden'); editingId = null; }
+
+    // Delete
+    window.openDeleteModal = function(id){
+      deletingId = id;
+      document.getElementById('deleteModal').classList.remove('hidden');
+    };
+    document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
+      if(!deletingId) return;
+      // envia POST vazio para rota de exclusão
+      const res = await fetch(`/admin/palestras/excluir/${deletingId}`, { method: 'POST' });
+      if(res.redirected){
+        showMessage('Palestra excluída com sucesso!');
+        document.getElementById('deleteModal').classList.add('hidden');
+        deletingId = null;
+        await renderPalestras();
+        await renderInscricoes();
+      } else {
+        showMessage('Erro ao excluir','error');
+      }
+    });
+    function closeDeleteModal(){ document.getElementById('deleteModal').classList.add('hidden'); deletingId = null; }
+
+    // inicializa
+    renderPalestras();
+    renderInscricoes();
+  </script>
+</body>
+</html>
